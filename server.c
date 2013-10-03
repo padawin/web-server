@@ -12,6 +12,7 @@ struct evhttp *http_server = NULL;
 
 char isWebCall(char **uri);
 char isAPICall(char **uri);
+short web_render_file(char* uri, struct evbuffer *evb);
 
 void request_handler(struct evhttp_request *req, void *arg)
 {
@@ -23,33 +24,13 @@ void request_handler(struct evhttp_request *req, void *arg)
 	fprintf(stdout, "Request for %s from %s\n", req->uri, req->remote_host);
 
 	if (isWebCall(&req->uri)) {
-		FILE* fp;
-		char* buffer = NULL;
-		size_t len = 0;
+		short rendered = web_render_file(req->uri, evb);
 
-		int reqSize;
-
-		reqSize = strlen(req->uri) + rootFolderSize + 1;
-		char filepath[reqSize];
-		snprintf(filepath, sizeof filepath, "%s%s", rootFolder, req->uri);
-
-
-		fp = fopen(filepath, "r");
-		if (!fp) {
+		if (rendered > 0) {
 			responseStatus = HTTP_NOTFOUND;
 			responseStatusText = "Not found";
 		}
 		else {
-			fseek(fp, 0, SEEK_END);
-			len = ftell(fp);
-			fseek(fp, 0, SEEK_SET);
-			buffer = malloc(len);
-			if (buffer) {
-				fread(buffer, 1, len, fp);
-				evbuffer_add_printf(evb, buffer);
-			}
-			fclose(fp);
-			free(buffer);
 			responseStatus = HTTP_OK;
 			responseStatusText = "OK";
 		}
@@ -68,6 +49,41 @@ void request_handler(struct evhttp_request *req, void *arg)
 	fprintf(stdout, "Response: %d %s\n", responseStatus, responseStatusText);
 	evbuffer_free(evb);
 	return;
+}
+
+short web_render_file(char* uri, struct evbuffer *evb)
+{
+	FILE* fp;
+	char* buffer = NULL;
+	size_t len = 0;
+
+	int reqSize;
+
+	reqSize = strlen(uri) + rootFolderSize + 1;
+	char filepath[reqSize];
+	snprintf(filepath, sizeof filepath, "%s%s", rootFolder, uri);
+
+	//~char* filepath = (char*) malloc((sizeof(req->uri) + rootFolderSize) * sizeof(char));
+	//~strcat(filepath, rootFolder);
+	//~strcat(filepath, req->uri);
+
+	fp = fopen(filepath, "r");
+	if (!fp) {
+		return 1;
+	}
+
+	fseek(fp, 0, SEEK_END);
+	len = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	buffer = malloc(len);
+	if (buffer) {
+		fread(buffer, 1, len, fp);
+		evbuffer_add(evb, buffer, len);
+	}
+	fclose(fp);
+	free(buffer);
+
+	return 0;
 }
 
 char _is(char **uri, char* what)
