@@ -4,11 +4,8 @@
 #include "event.h"
 #include "evhttp.h"
 
-short http_port = 9999;
-char *http_addr = "127.0.0.1";
 char* rootFolder;
 short rootFolderSize;
-struct evhttp *http_server = NULL;
 
 char isWebCall(char **uri);
 char isAPICall(char **uri);
@@ -100,6 +97,10 @@ char isAPICall(char **uri)
 
 int main (int argc, const char * argv[])
 {
+	short http_port = 9999;
+	char* http_addr = "127.0.0.1";
+	struct evhttp *http_server = NULL;
+
 	rootFolder = "/home/ghislain/dev-perso/server";
 	rootFolderSize = (int) strlen("/home/ghislain/dev-perso/server");
 
