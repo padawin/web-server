@@ -74,6 +74,7 @@ short web_render_file(char* uri, struct evbuffer *evb)
 		fread(buffer, 1, len, fp);
 		evbuffer_add(evb, buffer, len);
 	}
+
 	fclose(fp);
 	free(buffer);
 
@@ -95,7 +96,7 @@ char isAPICall(char **uri)
 	return _is(uri, "/api");
 }
 
-int main (int argc, const char * argv[])
+int main(int argc, const char * argv[])
 {
 	short http_port = 9999;
 	char* http_addr = "127.0.0.1";
