@@ -51,11 +51,18 @@ void request_handler(struct evhttp_request *req, void *arg)
 short web_render_file(char* uri, struct evbuffer *evb)
 {
 	FILE* fp;
-	char* buffer = NULL;
+	char *buffer, *filepath;
 	size_t len;
+	struct stat fs;
+	int nbChars, pSize, fInfo;
 
-	int nbChars = rootFolderSize + (int) strlen(uri);
-	char* filepath = (char*) calloc(nbChars, sizeof(char));
+	buffer = NULL;
+	filepath = NULL;
+
+	nbChars = rootFolderSize + (int) strlen(uri);
+	pSize = nbChars * sizeof(char);
+	filepath = (char*) malloc(pSize);
+
 	strcat(filepath, rootFolder);
 	strcat(filepath, uri);
 
