@@ -59,15 +59,14 @@ short web_render_file(char* uri, struct evbuffer *evb)
 
 	int reqSize;
 
-	reqSize = strlen(uri) + rootFolderSize + 1;
-	char filepath[reqSize];
-	snprintf(filepath, sizeof filepath, "%s%s", rootFolder, uri);
-
-	//~char* filepath = (char*) malloc((sizeof(req->uri) + rootFolderSize) * sizeof(char));
-	//~strcat(filepath, rootFolder);
-	//~strcat(filepath, req->uri);
+	int nbChars = rootFolderSize + (int) strlen(uri);
+	char* filepath = (char*) calloc(nbChars, sizeof(char));
+	strcat(filepath, rootFolder);
+	strcat(filepath, uri);
 
 	fp = fopen(filepath, "r");
+	free(filepath);
+
 	if (!fp) {
 		return 1;
 	}
