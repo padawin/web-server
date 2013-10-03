@@ -55,9 +55,7 @@ short web_render_file(char* uri, struct evbuffer *evb)
 {
 	FILE* fp;
 	char* buffer = NULL;
-	size_t len = 0;
-
-	int reqSize;
+	size_t len;
 
 	int nbChars = rootFolderSize + (int) strlen(uri);
 	char* filepath = (char*) calloc(nbChars, sizeof(char));
