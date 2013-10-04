@@ -133,7 +133,7 @@ int main(int argc, const char * argv[])
 	struct evhttp *http_server = NULL;
 
 	rootFolder = "/home/ghislain/dev-perso/server";
-	rootFolderSize = (int) strlen("/home/ghislain/dev-perso/server");
+	rootFolderSize = (int) strlen(rootFolder);
 
 	event_init();
 	http_server = evhttp_start(http_addr, http_port);
