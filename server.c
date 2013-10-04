@@ -78,6 +78,16 @@ short web_render_file(char* uri, struct evbuffer *evb)
 		return 1;
 	}
 
+	if ((fs.st_mode & S_IFDIR) == S_IFDIR) {
+	fprintf(stdout, "%s is dir", filepath);
+		char* dFile = "/index.html";
+		// 11 = strlen("/index.html")
+		filepath = realloc(filepath, pSize + 11 * sizeof(char));
+		strcat(filepath, dFile);
+		// the new file is the index.html in the directory, let's stat again
+		fInfo = stat(filepath, &fs);
+	}
+
 	fp = fopen(filepath, "r");
 	free(filepath);
 
