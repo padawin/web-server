@@ -70,7 +70,7 @@ short web_render_file(char* uri, struct evbuffer *evb)
 	cFilePath = realpath(filepath, cFilePath);
 	free(filepath);
 
-	if (strstr(cFilePath, rootFolder) == NULL) {
+	if (cFilePath == NULL || strstr(cFilePath, rootFolder) == NULL) {
 		return -1;
 	}
 
