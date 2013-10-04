@@ -84,7 +84,6 @@ short web_render_file(char* uri, struct evbuffer *evb)
 	}
 
 	if ((fs.st_mode & S_IFDIR) == S_IFDIR) {
-	fprintf(stdout, "%s is dir", filepath);
 		char* dFile = "/index.html";
 		// 11 = strlen("/index.html")
 		strcat(cFilePath, dFile);
@@ -113,6 +112,7 @@ short web_render_file(char* uri, struct evbuffer *evb)
 
 char _is(char **uri, char* what)
 {
+	// @XXX FIXME 4 must be dynamic
 	return strstr(*uri, what) - *uri == 0 && ((*uri)[4] == '\0' || (*uri)[4] == '/');
 }
 
