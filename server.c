@@ -71,7 +71,7 @@ short web_render_file(char* uri, struct evbuffer *evb)
 	// get some infos on the file
 	fInfo = stat(filepath, &fs);
 
-	if (fInfo == -1 || (fs.st_mode & S_IFREG) != S_IFREG) {
+	if (fInfo == -1) {
 		// @TODO check if the file does not exist
 		// errno == ENOENT => 404
 		free(filepath);
