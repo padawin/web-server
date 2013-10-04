@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+// stat call
+#include <sys/stat.h>
 #include "event.h"
 #include "evhttp.h"
 
@@ -65,6 +67,16 @@ short web_render_file(char* uri, struct evbuffer *evb)
 
 	strcat(filepath, rootFolder);
 	strcat(filepath, uri);
+
+	// get some infos on the file
+	fInfo = stat(filepath, &fs);
+
+	if (fInfo == -1 || (fs.st_mode & S_IFREG) != S_IFREG) {
+		// @TODO check if the file does not exist
+		// errno == ENOENT => 404
+		free(filepath);
+		return 1;
+	}
 
 	fp = fopen(filepath, "r");
 	free(filepath);
