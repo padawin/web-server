@@ -53,13 +53,14 @@ void request_handler(struct evhttp_request *req, void *arg)
 short web_render_file(char* uri, struct evbuffer *evb)
 {
 	FILE* fp;
-	char *buffer, *filepath;
+	char *buffer, *filepath, *cFilePath;
 	size_t len;
 	struct stat fs;
 	int nbChars, pSize, fInfo;
 
 	buffer = NULL;
 	filepath = NULL;
+	cFilePath = NULL;
 
 	nbChars = rootFolderSize + (int) strlen(uri) + 1;
 	pSize = nbChars * sizeof(char);
@@ -67,14 +68,19 @@ short web_render_file(char* uri, struct evbuffer *evb)
 
 	strcat(filepath, rootFolder);
 	strcat(filepath, uri);
+	cFilePath = realpath(filepath, cFilePath);
+	free(filepath);
+
+	if (strstr(cFilePath, rootFolder) == NULL) {
+		return 1;
+	}
 
 	// get some infos on the file
-	fInfo = stat(filepath, &fs);
+	fInfo = stat(cFilePath, &fs);
 
 	if (fInfo == -1) {
 		// @TODO check if the file does not exist
 		// errno == ENOENT => 404
-		free(filepath);
 		return 1;
 	}
 
@@ -82,14 +88,12 @@ short web_render_file(char* uri, struct evbuffer *evb)
 	fprintf(stdout, "%s is dir", filepath);
 		char* dFile = "/index.html";
 		// 11 = strlen("/index.html")
-		filepath = realloc(filepath, pSize + 11 * sizeof(char));
-		strcat(filepath, dFile);
+		strcat(cFilePath, dFile);
 		// the new file is the index.html in the directory, let's stat again
-		fInfo = stat(filepath, &fs);
+		fInfo = stat(cFilePath, &fs);
 	}
 
-	fp = fopen(filepath, "r");
-	free(filepath);
+	fp = fopen(cFilePath, "r");
 
 	if (!fp) {
 		return 1;
