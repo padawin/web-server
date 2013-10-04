@@ -25,7 +25,7 @@ void request_handler(struct evhttp_request *req, void *arg)
 	if (isWebCall(&req->uri)) {
 		short rendered = web_render_file(req->uri, evb);
 
-		if (rendered > 0) {
+		if (rendered < 0) {
 			responseStatus = HTTP_NOTFOUND;
 			responseStatusText = "Not found";
 		}
@@ -71,7 +71,7 @@ short web_render_file(char* uri, struct evbuffer *evb)
 	free(filepath);
 
 	if (strstr(cFilePath, rootFolder) == NULL) {
-		return 1;
+		return -1;
 	}
 
 	// get some infos on the file
@@ -80,7 +80,7 @@ short web_render_file(char* uri, struct evbuffer *evb)
 	if (fInfo == -1) {
 		// @TODO check if the file does not exist
 		// errno == ENOENT => 404
-		return 1;
+		return -1;
 	}
 
 	if ((fs.st_mode & S_IFDIR) == S_IFDIR) {
@@ -94,7 +94,7 @@ short web_render_file(char* uri, struct evbuffer *evb)
 	fp = fopen(cFilePath, "r");
 
 	if (!fp) {
-		return 1;
+		return -1;
 	}
 
 	len = fs.st_size;
