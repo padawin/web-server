@@ -95,9 +95,7 @@ short web_render_file(char* uri, struct evbuffer *evb)
 		return 1;
 	}
 
-	fseek(fp, 0, SEEK_END);
-	len = ftell(fp);
-	fseek(fp, 0, SEEK_SET);
+	len = fs.st_size;
 	buffer = malloc(len);
 	if (buffer) {
 		fread(buffer, 1, len, fp);
