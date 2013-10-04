@@ -56,14 +56,13 @@ short web_render_file(char* uri, struct evbuffer *evb)
 	char *buffer, *filepath, *cFilePath;
 	size_t len;
 	struct stat fs;
-	int nbChars, pSize, fInfo;
+	int nbChars, fInfo;
 
 	buffer = NULL;
 	filepath = NULL;
 	cFilePath = NULL;
 
 	nbChars = rootFolderSize + (int) strlen(uri) + 1;
-	pSize = nbChars * sizeof(char);
 	filepath = (char*) calloc(nbChars, sizeof(char));
 
 	strcat(filepath, rootFolder);
