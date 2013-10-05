@@ -5,9 +5,7 @@
 #include <sys/stat.h>
 #include "event.h"
 #include "evhttp.h"
-
-char* rootFolder;
-short rootFolderSize;
+#include "config.h"
 
 char isWebCall(char **uri);
 char isAPICall(char **uri);
@@ -57,20 +55,24 @@ short web_render_file(char* uri, struct evbuffer *evb)
 	size_t len;
 	struct stat fs;
 	int nbChars, fInfo;
+	s_config *c;
+	short rootFolderSize;
 
+	c = get_config();
 	buffer = NULL;
 	filepath = NULL;
 	cFilePath = NULL;
+	rootFolderSize = (short) strlen((*c).root);
 
 	nbChars = rootFolderSize + (int) strlen(uri) + 1;
 	filepath = (char*) calloc(nbChars, sizeof(char));
 
-	strcat(filepath, rootFolder);
+	strcat(filepath, (*c).root);
 	strcat(filepath, uri);
 	cFilePath = realpath(filepath, cFilePath);
 	free(filepath);
 
-	if (cFilePath == NULL || strstr(cFilePath, rootFolder) == NULL) {
+	if (cFilePath == NULL || strstr(cFilePath, (*c).root) == NULL) {
 		return -1;
 	}
 
@@ -128,12 +130,15 @@ char isAPICall(char **uri)
 
 int main(int argc, const char * argv[])
 {
-	short http_port = 9999;
-	char* http_addr = "127.0.0.1";
-	struct evhttp *http_server = NULL;
+	short http_port;
+	char *http_addr;
+	struct evhttp *http_server;
+	s_config *c;
 
-	rootFolder = "/home/ghislain/dev-perso/server";
-	rootFolderSize = (int) strlen(rootFolder);
+	http_server = NULL;
+	c = get_config();
+	http_addr = (*c).host;
+	http_port = (*c).port;
 
 	event_init();
 	http_server = evhttp_start(http_addr, http_port);
