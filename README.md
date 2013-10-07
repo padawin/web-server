@@ -11,7 +11,7 @@ libevent-dev
 ## Compilation
 
 ```
-make
+gcc -Wall -g -O2 server.c config.c -levent -o server
 ```
 
 ## Usage
