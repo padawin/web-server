@@ -7,10 +7,24 @@
 #include "evhttp.h"
 #include "config.h"
 
+/**
+ * Signatures
+ */
 char isWebCall(char **uri);
 char isAPICall(char **uri);
 short web_render_file(char* uri, struct evbuffer *evb);
 
+/**
+ * Callback to handle a request.
+ * Will check if it is a web call, or an API call
+ * Else a 404 error will be raised.
+ *
+ * A web call is a request starting with /web/
+ * A API call is a request starting with /api/
+ *
+ * A web call will serve static files stored in /web folder
+ * @TODO This has to be moved in config
+ */
 void request_handler(struct evhttp_request *req, void *arg)
 {
 	int responseStatus;
@@ -47,6 +61,9 @@ void request_handler(struct evhttp_request *req, void *arg)
 	evbuffer_free(evb);
 }
 
+/**
+ * Function to render a static file in a web call
+ */
 short web_render_file(char* uri, struct evbuffer *evb)
 {
 	FILE* fp;
@@ -111,16 +128,27 @@ short web_render_file(char* uri, struct evbuffer *evb)
 	return 0;
 }
 
+/**
+ * Function to know if a request starts with the what parameter.
+ *
+ * To know if the request is a web call, or an API call.
+ */
 char _is(char **uri, char* what, int whatLength)
 {
 	return strstr(*uri, what) - *uri == 0 && ((*uri)[whatLength] == '\0' || (*uri)[whatLength] == '/');
 }
 
+/**
+ * Function to know if the request is a web call
+ */
 char isWebCall(char **uri)
 {
 	return _is(uri, "/web", 4);
 }
 
+/**
+ * Function to know if the request is a API call
+ */
 char isAPICall(char **uri)
 {
 	return _is(uri, "/api", 4);
