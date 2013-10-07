@@ -8,4 +8,4 @@ typedef struct {
 	const char *host;
 } s_config;
 
-int get_config(s_config *c);
+int get_server_config(s_config *c);

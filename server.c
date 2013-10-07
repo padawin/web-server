@@ -184,7 +184,9 @@ int main()
 	struct evhttp *http_server;
 	s_config c;
 
-	get_config(&c);
+	if (get_server_config(&c) != CONFIG_FILE_READ_OK) {
+		exit(1);
+	}
 
 	http_server = NULL;
 	http_addr = c.host;
