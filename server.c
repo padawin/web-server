@@ -45,7 +45,6 @@ void request_handler(struct evhttp_request *req, void *arg)
 	evhttp_send_reply(req, responseStatus, responseStatusText, evb);
 	fprintf(stdout, "Response: %d %s\n", responseStatus, responseStatusText);
 	evbuffer_free(evb);
-	return;
 }
 
 short web_render_file(char* uri, struct evbuffer *evb)
