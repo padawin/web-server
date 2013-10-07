@@ -73,7 +73,13 @@ void send_reply(
 	char *status_text
 )
 {
-	evhttp_send_reply(req, status, status_text, evb);
+	if (status != HTTP_OK) {
+		evhttp_send_error(req, status, status_text);
+	}
+	else {
+		evhttp_send_reply(req, status, status_text, evb);
+	}
+
 	fprintf(stdout, "Response: %d %s\n", status, status_text);
 	evbuffer_free(evb);
 }
