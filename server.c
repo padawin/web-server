@@ -13,6 +13,13 @@
 char isWebCall(char **uri);
 char isAPICall(char **uri);
 short web_render_file(char* uri, struct evbuffer *evb);
+void send_reply(
+	struct evhttp_request *req,
+	struct evbuffer *evb,
+	short status,
+	char *status_text
+);
+
 
 /**
  * Callback to handle a request.
@@ -56,8 +63,18 @@ void request_handler(struct evhttp_request *req, void *arg)
 		responseStatusText = "Not found";
 	}
 
-	evhttp_send_reply(req, responseStatus, responseStatusText, evb);
-	fprintf(stdout, "Response: %d %s\n", responseStatus, responseStatusText);
+	send_reply(req, evb, responseStatus, responseStatusText);
+}
+
+void send_reply(
+	struct evhttp_request *req,
+	struct evbuffer *evb,
+	short status,
+	char *status_text
+)
+{
+	evhttp_send_reply(req, status, status_text, evb);
+	fprintf(stdout, "Response: %d %s\n", status, status_text);
 	evbuffer_free(evb);
 }
 
