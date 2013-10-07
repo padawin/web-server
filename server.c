@@ -111,20 +111,19 @@ short web_render_file(char* uri, struct evbuffer *evb)
 	return 0;
 }
 
-char _is(char **uri, char* what)
+char _is(char **uri, char* what, int whatLength)
 {
-	// @XXX FIXME 4 must be dynamic
-	return strstr(*uri, what) - *uri == 0 && ((*uri)[4] == '\0' || (*uri)[4] == '/');
+	return strstr(*uri, what) - *uri == 0 && ((*uri)[whatLength] == '\0' || (*uri)[whatLength] == '/');
 }
 
 char isWebCall(char **uri)
 {
-	return _is(uri, "/web");
+	return _is(uri, "/web", 4);
 }
 
 char isAPICall(char **uri)
 {
-	return _is(uri, "/api");
+	return _is(uri, "/api", 4);
 }
 
 int main(int argc, const char * argv[])
