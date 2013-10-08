@@ -11,7 +11,7 @@ libevent-dev
 ## Usage
 
 
-In config.c, change the value of c.root to match your path.
+In config.cfg, change the values to match your environment.
 
 Compile it:
 ```
@@ -27,8 +27,8 @@ make
 
 ### Web
 
-To use the web part, you'll need a web folder at the root of the project, then,
-call http://localhost:9999/web/your/file
+To use the web part, you'll need a web folder and its path must be in the
+web_root variable in the config.cfg.
 
 For example if you have in your web folder a test.html file, you can serve it:
 http://localhost:9999/web/test.html
