@@ -1,7 +1,7 @@
 typedef struct {
-	char *root;
-	short port;
-	char *host;
+	const char *root;
+	unsigned short port;
+	const char *host;
 } s_config;
 
-s_config *get_config();
+int get_config(s_config *c);

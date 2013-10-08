@@ -10,14 +10,16 @@
 /**
  * Signatures
  */
+char _is(char **uri, const char* what, int whatLength);
 char isWebCall(char **uri);
 char isAPICall(char **uri);
-short web_render_file(char* uri, struct evbuffer *evb);
+short web_render_file(char* uri, struct evbuffer *evb, s_config *conf);
+void request_handler(struct evhttp_request *req, void *conf);
 void send_reply(
 	struct evhttp_request *req,
 	struct evbuffer *evb,
 	short status,
-	char *status_text
+	const char *status_text
 );
 
 
@@ -32,17 +34,17 @@ void send_reply(
  * A web call will serve static files stored in /web folder
  * @TODO This has to be moved in config
  */
-void request_handler(struct evhttp_request *req, void *arg)
+void request_handler(struct evhttp_request *req, void *conf)
 {
-	int responseStatus;
-	char* responseStatusText;
+	short responseStatus;
+	const char* responseStatusText;
 	struct evbuffer *evb;
 
 	evb = evbuffer_new();
 	fprintf(stdout, "Request for %s from %s\n", req->uri, req->remote_host);
 
 	if (isWebCall(&req->uri)) {
-		short rendered = web_render_file(req->uri, evb);
+		short rendered = web_render_file(req->uri, evb, conf);
 
 		if (rendered < 0) {
 			responseStatus = HTTP_NOTFOUND;
@@ -70,7 +72,7 @@ void send_reply(
 	struct evhttp_request *req,
 	struct evbuffer *evb,
 	short status,
-	char *status_text
+	const char *status_text
 )
 {
 	if (status != HTTP_OK) {
@@ -87,31 +89,29 @@ void send_reply(
 /**
  * Function to render a static file in a web call
  */
-short web_render_file(char* uri, struct evbuffer *evb)
+short web_render_file(char* uri, struct evbuffer *evb, s_config *conf)
 {
 	FILE* fp;
 	char *buffer, *filepath, *cFilePath;
 	size_t len;
 	struct stat fs;
 	int nbChars, fInfo;
-	s_config *c;
 	short rootFolderSize;
 
-	c = get_config();
 	buffer = NULL;
 	filepath = NULL;
 	cFilePath = NULL;
-	rootFolderSize = (short) strlen((*c).root);
+	rootFolderSize = (short) strlen(conf->root);
 
 	nbChars = rootFolderSize + (int) strlen(uri) + 1;
-	filepath = (char*) calloc(nbChars, sizeof(char));
+	filepath = (char*) calloc((size_t) nbChars, sizeof(char));
 
-	strcat(filepath, (*c).root);
+	strcat(filepath, conf->root);
 	strcat(filepath, uri);
 	cFilePath = realpath(filepath, cFilePath);
 	free(filepath);
 
-	if (cFilePath == NULL || strstr(cFilePath, (*c).root) == NULL) {
+	if (cFilePath == NULL || strstr(cFilePath, conf->root) == NULL) {
 		return -1;
 	}
 
@@ -125,7 +125,7 @@ short web_render_file(char* uri, struct evbuffer *evb)
 	}
 
 	if ((fs.st_mode & S_IFDIR) == S_IFDIR) {
-		char* dFile = "/index.html";
+		const char* dFile = "/index.html";
 		// 11 = strlen("/index.html")
 		strcat(cFilePath, dFile);
 		// the new file is the index.html in the directory, let's stat again
@@ -138,7 +138,7 @@ short web_render_file(char* uri, struct evbuffer *evb)
 		return -1;
 	}
 
-	len = fs.st_size;
+	len = (size_t) fs.st_size;
 	buffer = malloc(len);
 	if (buffer) {
 		fread(buffer, 1, len, fp);
@@ -156,7 +156,7 @@ short web_render_file(char* uri, struct evbuffer *evb)
  *
  * To know if the request is a web call, or an API call.
  */
-char _is(char **uri, char* what, int whatLength)
+char _is(char **uri, const char* what, int whatLength)
 {
 	return strstr(*uri, what) - *uri == 0 && ((*uri)[whatLength] == '\0' || (*uri)[whatLength] == '/');
 }
@@ -177,17 +177,18 @@ char isAPICall(char **uri)
 	return _is(uri, "/api", 4);
 }
 
-int main(int argc, const char * argv[])
+int main()
 {
-	short http_port;
-	char *http_addr;
+	unsigned short http_port;
+	const char *http_addr;
 	struct evhttp *http_server;
-	s_config *c;
+	s_config c;
+
+	get_config(&c);
 
 	http_server = NULL;
-	c = get_config();
-	http_addr = (*c).host;
-	http_port = (*c).port;
+	http_addr = c.host;
+	http_port = c.port;
 
 	event_init();
 	http_server = evhttp_start(http_addr, http_port);
@@ -196,7 +197,7 @@ int main(int argc, const char * argv[])
 		exit(1);
 	}
 
-	evhttp_set_gencb(http_server, request_handler, NULL);
+	evhttp_set_gencb(http_server, request_handler, &c);
 
 	fprintf(stderr, "Server started on port %d\n", http_port);
 
