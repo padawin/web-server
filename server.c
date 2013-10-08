@@ -10,14 +10,16 @@
 /**
  * Signatures
  */
+char _is(char **uri, const char* what, int whatLength);
 char isWebCall(char **uri);
 char isAPICall(char **uri);
 short web_render_file(char* uri, struct evbuffer *evb);
+void request_handler(struct evhttp_request *req, void *arg);
 void send_reply(
 	struct evhttp_request *req,
 	struct evbuffer *evb,
 	short status,
-	char *status_text
+	const char *status_text
 );
 
 
@@ -34,8 +36,8 @@ void send_reply(
  */
 void request_handler(struct evhttp_request *req, void *arg)
 {
-	int responseStatus;
-	char* responseStatusText;
+	short responseStatus;
+	const char* responseStatusText;
 	struct evbuffer *evb;
 
 	evb = evbuffer_new();
@@ -70,7 +72,7 @@ void send_reply(
 	struct evhttp_request *req,
 	struct evbuffer *evb,
 	short status,
-	char *status_text
+	const char *status_text
 )
 {
 	if (status != HTTP_OK) {
@@ -104,7 +106,7 @@ short web_render_file(char* uri, struct evbuffer *evb)
 	rootFolderSize = (short) strlen((*c).root);
 
 	nbChars = rootFolderSize + (int) strlen(uri) + 1;
-	filepath = (char*) calloc(nbChars, sizeof(char));
+	filepath = (char*) calloc((size_t) nbChars, sizeof(char));
 
 	strcat(filepath, (*c).root);
 	strcat(filepath, uri);
@@ -125,7 +127,7 @@ short web_render_file(char* uri, struct evbuffer *evb)
 	}
 
 	if ((fs.st_mode & S_IFDIR) == S_IFDIR) {
-		char* dFile = "/index.html";
+		const char* dFile = "/index.html";
 		// 11 = strlen("/index.html")
 		strcat(cFilePath, dFile);
 		// the new file is the index.html in the directory, let's stat again
@@ -138,7 +140,7 @@ short web_render_file(char* uri, struct evbuffer *evb)
 		return -1;
 	}
 
-	len = fs.st_size;
+	len = (size_t) fs.st_size;
 	buffer = malloc(len);
 	if (buffer) {
 		fread(buffer, 1, len, fp);
@@ -156,7 +158,7 @@ short web_render_file(char* uri, struct evbuffer *evb)
  *
  * To know if the request is a web call, or an API call.
  */
-char _is(char **uri, char* what, int whatLength)
+char _is(char **uri, const char* what, int whatLength)
 {
 	return strstr(*uri, what) - *uri == 0 && ((*uri)[whatLength] == '\0' || (*uri)[whatLength] == '/');
 }
@@ -177,10 +179,10 @@ char isAPICall(char **uri)
 	return _is(uri, "/api", 4);
 }
 
-int main(int argc, const char * argv[])
+int main()
 {
-	short http_port;
-	char *http_addr;
+	unsigned short http_port;
+	const char *http_addr;
 	struct evhttp *http_server;
 	s_config *c;
 

@@ -1,15 +1,25 @@
-INCDIRS =       -I/usr/local/include
-CC =            gcc
-CFLAGS =        $(INCDIRS) -Wall -g -O2
-LIBS =          -levent
+PROG   := server
+CC     := gcc
+CFLAGS := -g -O2 -Wall -Wextra -Wwrite-strings -Wformat=2 -Wconversion -Wmissing-declarations -Wmissing-prototypes
+LDFLAGS:= -levent
 
-all: server
+SRC := $(wildcard *.c)
+OBJ := $(patsubst %.c,%.o,$(SRC))
+DEP := $(patsubst %.c,%.deps,$(SRC))
 
-server: server.o
-	$(CC) $(CFLAGS) server.o -g -O2 -o $@ $(LIBS)
+all: $(PROG)
 
-%.o : %.c
-	$(CC) $(CFLAGS) -c $<
+-include $(DEP)
+
+%.deps: %.c
+	$(CC) -MM $< >$@
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c -MMD $< -o $@
 
 clean:
-	rm -f *.o server
+	rm -f *.o *.d *.deps $(PROG)
+
+$(PROG): $(OBJ)
+	$(CC) -o $@ $^ $(LDFLAGS)
+

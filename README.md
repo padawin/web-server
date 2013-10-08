@@ -15,7 +15,7 @@ In config.c, change the value of c.root to match your path.
 
 Compile it:
 ```
-gcc -Wall -g -O2 server.c config.c -levent -o server
+make
 ```
 
 ## Usage
