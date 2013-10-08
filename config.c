@@ -14,9 +14,9 @@ int get_server_config(s_config *c)
 		return CONFIG_FILE_READ_ERROR;
 	}
 
-	if (config_lookup_string(&cfg, "root", &((*c).root))
-		&& config_lookup_int(&cfg, "port", &((*c).port))
-		&& config_lookup_string(&cfg, "host", &((*c).host))
+	if (config_lookup_string(&cfg, "root", &(c->root))
+		&& config_lookup_int(&cfg, "port", &(c->port))
+		&& config_lookup_string(&cfg, "host", &(c->host))
 	) {
 		generated = 1;
 		return CONFIG_FILE_READ_OK;
