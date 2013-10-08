@@ -101,7 +101,7 @@ short web_render_file(char* uri, struct evbuffer *evb, s_config *conf)
 	buffer = NULL;
 	filepath = NULL;
 	cFilePath = NULL;
-	rootFolderSize = (short) strlen(conf->root);
+	rootFolderSize = (short) strlen(conf->web_root);
 
 	nbChars = rootFolderSize + (int) strlen(uri) + 1;
 	filepath = (char*) calloc((size_t) nbChars, sizeof(char));
@@ -111,7 +111,7 @@ short web_render_file(char* uri, struct evbuffer *evb, s_config *conf)
 	cFilePath = realpath(filepath, cFilePath);
 	free(filepath);
 
-	if (cFilePath == NULL || strstr(cFilePath, conf->root) == NULL) {
+	if (cFilePath == NULL || strstr(cFilePath, conf->web_root) == NULL) {
 		return -1;
 	}
 

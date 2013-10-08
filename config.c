@@ -14,8 +14,7 @@ int get_server_config(s_config *c)
 		return CONFIG_FILE_READ_ERROR;
 	}
 
-	if (config_lookup_string(&cfg, "root", &(c->root))
-		&& config_lookup_int(&cfg, "port", &(c->port))
+	if (config_lookup_int(&cfg, "port", &(c->port))
 		&& config_lookup_string(&cfg, "host", &(c->host))
 		&& config_lookup_string(&cfg, "web_root", &(c->web_root))
 		&& config_lookup_string(&cfg, "web_prefix", &(c->web_prefix))

@@ -3,7 +3,6 @@
 #define CONFIG_MISSING_KEY -2
 
 typedef struct {
-	const char *root;
 	int port;
 	const char *host;
 	const char *web_root;
