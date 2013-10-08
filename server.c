@@ -11,8 +11,8 @@
  * Signatures
  */
 char _is(char **uri, const char* what, int whatLength);
-char isWebCall(char **uri);
-char isAPICall(char **uri);
+char isWebCall(char **uri, s_config *conf);
+char isAPICall(char **uri, s_config *conf);
 short web_render_file(char* uri, struct evbuffer *evb, s_config *conf);
 void request_handler(struct evhttp_request *req, void *conf);
 void send_reply(
@@ -43,7 +43,7 @@ void request_handler(struct evhttp_request *req, void *conf)
 	evb = evbuffer_new();
 	fprintf(stdout, "Request for %s from %s\n", req->uri, req->remote_host);
 
-	if (isWebCall(&req->uri)) {
+	if (isWebCall(&req->uri, conf)) {
 		short rendered = web_render_file(req->uri, evb, conf);
 
 		if (rendered < 0) {
@@ -55,7 +55,7 @@ void request_handler(struct evhttp_request *req, void *conf)
 			responseStatusText = "OK";
 		}
 	}
-	else if (isAPICall(&req->uri)) {
+	else if (isAPICall(&req->uri, conf)) {
 		evbuffer_add_printf(evb, "api");
 		responseStatus = HTTP_OK;
 		responseStatusText = "OK";
@@ -106,8 +106,8 @@ short web_render_file(char* uri, struct evbuffer *evb, s_config *conf)
 	nbChars = rootFolderSize + (int) strlen(uri) + 1;
 	filepath = (char*) calloc((size_t) nbChars, sizeof(char));
 
-	strcat(filepath, conf->root);
-	strcat(filepath, uri);
+	strcat(filepath, conf->web_root);
+	strcat(filepath, &uri[strlen(conf->web_prefix)]);
 	cFilePath = realpath(filepath, cFilePath);
 	free(filepath);
 
@@ -125,8 +125,8 @@ short web_render_file(char* uri, struct evbuffer *evb, s_config *conf)
 	}
 
 	if ((fs.st_mode & S_IFDIR) == S_IFDIR) {
-		const char* dFile = "/index.html";
-		// 11 = strlen("/index.html")
+		const char* dFile = conf->index_file;
+		strcat(cFilePath, "/");
 		strcat(cFilePath, dFile);
 		// the new file is the index.html in the directory, let's stat again
 		fInfo = stat(cFilePath, &fs);
@@ -164,17 +164,17 @@ char _is(char **uri, const char* what, int whatLength)
 /**
  * Function to know if the request is a web call
  */
-char isWebCall(char **uri)
+char isWebCall(char **uri, s_config *conf)
 {
-	return _is(uri, "/web", 4);
+	return _is(uri, conf->web_prefix, (int) strlen(conf->web_prefix));
 }
 
 /**
  * Function to know if the request is a API call
  */
-char isAPICall(char **uri)
+char isAPICall(char **uri, s_config *conf)
 {
-	return _is(uri, "/api", 4);
+	return _is(uri, conf->api_prefix, (int) strlen(conf->api_prefix));
 }
 
 int main()

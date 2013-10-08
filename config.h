@@ -6,6 +6,10 @@ typedef struct {
 	const char *root;
 	int port;
 	const char *host;
+	const char *web_root;
+	const char *web_prefix;
+	const char *api_prefix;
+	const char *index_file;
 } s_config;
 
 int get_server_config(s_config *c);
