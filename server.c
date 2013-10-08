@@ -13,8 +13,8 @@
 char _is(char **uri, const char* what, int whatLength);
 char isWebCall(char **uri);
 char isAPICall(char **uri);
-short web_render_file(char* uri, struct evbuffer *evb);
-void request_handler(struct evhttp_request *req, void *arg);
+short web_render_file(char* uri, struct evbuffer *evb, s_config *conf);
+void request_handler(struct evhttp_request *req, void *conf);
 void send_reply(
 	struct evhttp_request *req,
 	struct evbuffer *evb,
@@ -34,7 +34,7 @@ void send_reply(
  * A web call will serve static files stored in /web folder
  * @TODO This has to be moved in config
  */
-void request_handler(struct evhttp_request *req, void *arg)
+void request_handler(struct evhttp_request *req, void *conf)
 {
 	short responseStatus;
 	const char* responseStatusText;
@@ -44,7 +44,7 @@ void request_handler(struct evhttp_request *req, void *arg)
 	fprintf(stdout, "Request for %s from %s\n", req->uri, req->remote_host);
 
 	if (isWebCall(&req->uri)) {
-		short rendered = web_render_file(req->uri, evb);
+		short rendered = web_render_file(req->uri, evb, conf);
 
 		if (rendered < 0) {
 			responseStatus = HTTP_NOTFOUND;
@@ -89,31 +89,30 @@ void send_reply(
 /**
  * Function to render a static file in a web call
  */
-short web_render_file(char* uri, struct evbuffer *evb)
+short web_render_file(char* uri, struct evbuffer *evb, s_config *conf)
 {
 	FILE* fp;
 	char *buffer, *filepath, *cFilePath;
 	size_t len;
 	struct stat fs;
 	int nbChars, fInfo;
-	s_config *c;
 	short rootFolderSize;
 
-	c = get_config();
+	conf = get_config();
 	buffer = NULL;
 	filepath = NULL;
 	cFilePath = NULL;
-	rootFolderSize = (short) strlen((*c).root);
+	rootFolderSize = (short) strlen((*conf).root);
 
 	nbChars = rootFolderSize + (int) strlen(uri) + 1;
 	filepath = (char*) calloc((size_t) nbChars, sizeof(char));
 
-	strcat(filepath, (*c).root);
+	strcat(filepath, (*conf).root);
 	strcat(filepath, uri);
 	cFilePath = realpath(filepath, cFilePath);
 	free(filepath);
 
-	if (cFilePath == NULL || strstr(cFilePath, (*c).root) == NULL) {
+	if (cFilePath == NULL || strstr(cFilePath, (*conf).root) == NULL) {
 		return -1;
 	}
 
@@ -198,7 +197,7 @@ int main()
 		exit(1);
 	}
 
-	evhttp_set_gencb(http_server, request_handler, NULL);
+	evhttp_set_gencb(http_server, request_handler, c);
 
 	fprintf(stderr, "Server started on port %d\n", http_port);
 
