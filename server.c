@@ -179,19 +179,21 @@ char isAPICall(char **uri)
 
 int main()
 {
-	unsigned short http_port;
+	int http_port;
 	const char *http_addr;
 	struct evhttp *http_server;
 	s_config c;
 
-	get_config(&c);
+	if (get_server_config(&c) != CONFIG_FILE_READ_OK) {
+		exit(1);
+	}
 
 	http_server = NULL;
 	http_addr = c.host;
 	http_port = c.port;
 
 	event_init();
-	http_server = evhttp_start(http_addr, http_port);
+	http_server = evhttp_start(http_addr, (short unsigned int) http_port);
 	if (http_server == NULL) {
 		fprintf(stderr, "Error starting http server on port %d\n", http_port);
 		exit(1);
