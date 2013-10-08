@@ -4,7 +4,7 @@
 
 typedef struct {
 	const char *root;
-	unsigned short port;
+	int port;
 	const char *host;
 } s_config;
 
