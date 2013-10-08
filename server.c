@@ -98,21 +98,20 @@ short web_render_file(char* uri, struct evbuffer *evb, s_config *conf)
 	int nbChars, fInfo;
 	short rootFolderSize;
 
-	conf = get_config();
 	buffer = NULL;
 	filepath = NULL;
 	cFilePath = NULL;
-	rootFolderSize = (short) strlen((*conf).root);
+	rootFolderSize = (short) strlen(conf->root);
 
 	nbChars = rootFolderSize + (int) strlen(uri) + 1;
 	filepath = (char*) calloc((size_t) nbChars, sizeof(char));
 
-	strcat(filepath, (*conf).root);
+	strcat(filepath, conf->root);
 	strcat(filepath, uri);
 	cFilePath = realpath(filepath, cFilePath);
 	free(filepath);
 
-	if (cFilePath == NULL || strstr(cFilePath, (*conf).root) == NULL) {
+	if (cFilePath == NULL || strstr(cFilePath, conf->root) == NULL) {
 		return -1;
 	}
 
@@ -183,12 +182,13 @@ int main()
 	unsigned short http_port;
 	const char *http_addr;
 	struct evhttp *http_server;
-	s_config *c;
+	s_config c;
+
+	get_config(&c);
 
 	http_server = NULL;
-	c = get_config();
-	http_addr = (*c).host;
-	http_port = (*c).port;
+	http_addr = c.host;
+	http_port = c.port;
 
 	event_init();
 	http_server = evhttp_start(http_addr, http_port);
@@ -197,7 +197,7 @@ int main()
 		exit(1);
 	}
 
-	evhttp_set_gencb(http_server, request_handler, c);
+	evhttp_set_gencb(http_server, request_handler, &c);
 
 	fprintf(stderr, "Server started on port %d\n", http_port);
 
