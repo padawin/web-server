@@ -200,7 +200,7 @@ int main()
 
 	evhttp_set_gencb(http_server, request_handler, c);
 
-	fprintf(stderr, "Server started on port %d\n", http_port);
+	fprintf(stdout, "Server started on port %d\n", http_port);
 
 	event_dispatch();
 
