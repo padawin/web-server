@@ -30,9 +30,6 @@ void send_reply(
  *
  * A web call is a request starting with /web/
  * A API call is a request starting with /api/
- *
- * A web call will serve static files stored in /web folder
- * @TODO This has to be moved in config
  */
 void request_handler(struct evhttp_request *req, void *conf)
 {
