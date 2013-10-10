@@ -92,13 +92,12 @@ void send_reply(
 short web_render_file(char* uri, struct evbuffer *evb, s_config *conf)
 {
 	FILE* fp;
-	char *buffer, *filepath, *cFilePath;
+	char *filepath, *cFilePath;
 	size_t len;
 	struct stat fs;
 	int nbChars, fInfo;
 	short rootFolderSize;
 
-	buffer = NULL;
 	filepath = NULL;
 	cFilePath = NULL;
 	rootFolderSize = (short) strlen(conf->web_root);
@@ -139,14 +138,10 @@ short web_render_file(char* uri, struct evbuffer *evb, s_config *conf)
 	}
 
 	len = (size_t) fs.st_size;
-	buffer = malloc(len);
-	if (buffer) {
-		fread(buffer, 1, len, fp);
-		evbuffer_add(evb, buffer, len);
-	}
+	fread(conf->buffer, 1, len, fp);
+	evbuffer_add(evb, conf->buffer, len);
 
 	fclose(fp);
-	free(buffer);
 
 	return 0;
 }
@@ -187,6 +182,8 @@ int main()
 	if (get_server_config(&c) != CONFIG_FILE_READ_OK) {
 		exit(1);
 	}
+
+	c.buffer = (char*) calloc((size_t) c.buffer_size, sizeof(char));
 
 	http_server = NULL;
 	http_addr = c.host;
