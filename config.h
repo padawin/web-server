@@ -9,6 +9,8 @@ typedef struct {
 	const char *web_prefix;
 	const char *api_prefix;
 	const char *index_file;
+	int buffer_size;
+	char *buffer;
 } s_config;
 
 int get_server_config(s_config *c);
