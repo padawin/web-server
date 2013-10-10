@@ -179,7 +179,9 @@ int main()
 
 	c = (s_config*) malloc(sizeof(s_config));
 
-	if (get_server_config(c) != CONFIG_FILE_READ_OK) {
+	int confRet;
+	if ((confRet = get_server_config(c)) != CONFIG_FILE_READ_OK) {
+		fprintf(stderr, "Error while reading the configuration file, error %d\n", confRet);
 		exit(1);
 	}
 
