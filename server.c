@@ -3,8 +3,8 @@
 #include <string.h>
 // stat call
 #include <sys/stat.h>
-#include "event.h"
-#include "evhttp.h"
+#include <event.h>
+#include <evhttp.h>
 #include "config.h"
 
 /**
