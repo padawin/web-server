@@ -93,7 +93,6 @@ short web_render_file(char* uri, struct evbuffer *evb, s_config *conf)
 {
 	FILE* fp;
 	char *filepath, *cFilePath;
-	size_t len;
 	struct stat fs;
 	int nbChars, fInfo;
 	short rootFolderSize;
@@ -137,9 +136,11 @@ short web_render_file(char* uri, struct evbuffer *evb, s_config *conf)
 		return -1;
 	}
 
-	len = (size_t) fs.st_size;
-	fread(conf->buffer, 1, len, fp);
-	evbuffer_add(evb, conf->buffer, len);
+	size_t sBuff;
+	while (!feof(fp)) {
+		sBuff = fread(conf->buffer, 1, (size_t) conf->buffer_size, fp);
+		evbuffer_add(evb, conf->buffer, sBuff);
+	}
 
 	fclose(fp);
 
