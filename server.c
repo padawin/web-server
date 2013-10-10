@@ -200,5 +200,7 @@ int main()
 
 	event_dispatch();
 
+	free(c.buffer);
+
 	return 0;
 }
