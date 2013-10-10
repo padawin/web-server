@@ -20,6 +20,7 @@ int get_server_config(s_config *c)
 		&& config_lookup_string(&cfg, "web_prefix", &(c->web_prefix))
 		&& config_lookup_string(&cfg, "api_prefix", &(c->api_prefix))
 		&& config_lookup_string(&cfg, "index_file", &(c->index_file))
+		&& config_lookup_int(&cfg, "buffer_size", &(c->buffer_size))
 	) {
 		generated = 1;
 		return CONFIG_FILE_READ_OK;
