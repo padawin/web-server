@@ -175,17 +175,19 @@ int main()
 	int http_port;
 	const char *http_addr;
 	struct evhttp *http_server;
-	s_config c;
+	s_config *c;
 
-	if (get_server_config(&c) != CONFIG_FILE_READ_OK) {
+	c = (s_config*) malloc(sizeof(s_config));
+
+	if (get_server_config(c) != CONFIG_FILE_READ_OK) {
 		exit(1);
 	}
 
-	c.buffer = (char*) calloc((size_t) c.buffer_size, sizeof(char));
+	c->buffer = (char*) calloc((size_t) c->buffer_size, sizeof(char));
 
 	http_server = NULL;
-	http_addr = c.host;
-	http_port = c.port;
+	http_addr = c->host;
+	http_port = c->port;
 
 	event_init();
 	http_server = evhttp_start(http_addr, (short unsigned int) http_port);
@@ -194,13 +196,13 @@ int main()
 		exit(1);
 	}
 
-	evhttp_set_gencb(http_server, request_handler, &c);
+	evhttp_set_gencb(http_server, request_handler, c);
 
 	fprintf(stderr, "Server started on port %d\n", http_port);
 
 	event_dispatch();
 
-	free(c.buffer);
+	free(c->buffer);
 
 	return 0;
 }
