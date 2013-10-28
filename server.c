@@ -154,6 +154,45 @@ short web_render_file(char* uri, struct evbuffer *evb, s_config *conf)
 
 short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 {
+	char *uri, *module;
+	int uriStartChar, moduleLen;
+
+	// Remove the "/[conf->api_prefix]/" of the uri
+	uriStartChar = (int) strlen(conf->api_prefix);
+	uri = &req->uri[uriStartChar];
+
+	// no module provided, full uri like /api or /api/
+	if (
+		strlen(uri) <= 1 ||
+		// uri like ?foo
+		uri[0] == '?' ||
+		// uri like /?foo
+		uri[1] == '?' ||
+		//uri like //foo
+		uri[1] == '/'
+	) {
+		return -1;
+	}
+
+	// remove left training / in uri
+	uri = &uri[1];
+	// The module is the substring before the next /
+	module = strchr(uri, '/');
+	// or the substring before the next question mark
+	if (module == NULL) {
+		module = strchr(uri, '?');
+	}
+
+	if (module == NULL) {
+		module = uri;
+	}
+	else {
+		moduleLen = (int) (module - uri);
+		module = (char*) malloc((size_t) moduleLen);
+		strncpy(module, uri, (long unsigned int) moduleLen);
+	}
+
+	free(module);
 	return 0;
 }
 
