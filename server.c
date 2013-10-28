@@ -14,6 +14,7 @@ char _is(char **uri, const char* what, int whatLength);
 char isWebCall(char **uri, s_config *conf);
 char isAPICall(char **uri, s_config *conf);
 short web_render_file(char* uri, struct evbuffer *evb, s_config *conf);
+short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf);
 void request_handler(struct evhttp_request *req, void *conf);
 void send_reply(
 	struct evhttp_request *req,
@@ -53,9 +54,16 @@ void request_handler(struct evhttp_request *req, void *conf)
 		}
 	}
 	else if (isAPICall(&req->uri, conf)) {
-		evbuffer_add_printf(evb, "api");
-		responseStatus = HTTP_OK;
-		responseStatusText = "OK";
+		short result = api_cb(req, evb, conf);
+
+		if (result < 0) {
+			responseStatus = HTTP_NOTFOUND;
+			responseStatusText = "Not found";
+		}
+		else {
+			responseStatus = HTTP_OK;
+			responseStatusText = "OK";
+		}
 	}
 	else {
 		responseStatus = HTTP_NOTFOUND;
@@ -141,6 +149,11 @@ short web_render_file(char* uri, struct evbuffer *evb, s_config *conf)
 
 	fclose(fp);
 
+	return 0;
+}
+
+short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
+{
 	return 0;
 }
 
