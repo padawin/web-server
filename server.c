@@ -188,11 +188,10 @@ short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 	}
 	else {
 		moduleLen = (int) (module - uri);
-		module = (char*) malloc((size_t) moduleLen);
-		strncpy(module, uri, (long unsigned int) moduleLen);
+		module = uri;
+		module[moduleLen] = '\0';
 	}
 
-	free(module);
 	return 0;
 }
 
