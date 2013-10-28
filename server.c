@@ -164,7 +164,7 @@ short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
  */
 char _is(char **uri, const char* what, int whatLength)
 {
-	return strstr(*uri, what) - *uri == 0 && ((*uri)[whatLength] == '\0' || (*uri)[whatLength] == '/');
+	return strstr(*uri, what) - *uri == 0 && ((*uri)[whatLength] == '\0' || (*uri)[whatLength] == '/' || (*uri)[whatLength] == '?');
 }
 
 /**
