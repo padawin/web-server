@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "config.h"
 #include <libconfig.h>
 
@@ -30,15 +31,13 @@ int get_server_config(s_config *c)
 		if (modules_setting != NULL) {
 			count = (unsigned int) config_setting_length(modules_setting);
 
-			char *modules[count];
+			c->api_modules = malloc(count * sizeof(char*));
 			for (i = 0; i < count; ++i) {
 				module_setting = config_setting_get_elem(modules_setting, i);
 				module_name = config_setting_get_string(module_setting);
 
-				modules[i] = (char *) module_name;
+				c->api_modules[i] = (char *) module_name;
 			}
-
-			c->api_modules = modules;
 		}
 		return CONFIG_FILE_READ_OK;
 	}

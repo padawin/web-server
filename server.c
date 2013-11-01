@@ -256,6 +256,7 @@ int main()
 	event_dispatch();
 
 	free(c->buffer);
+	free(c->api_modules);
 
 	return 0;
 }
