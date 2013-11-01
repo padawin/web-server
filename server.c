@@ -155,7 +155,8 @@ short web_render_file(char* uri, struct evbuffer *evb, s_config *conf)
 short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 {
 	char *uri, *module;
-	int uriStartChar, moduleLen;
+	char found;
+	int uriStartChar, moduleLen, moduleIndex;
 
 	// Remove the "/[conf->api_prefix]/" of the uri
 	uriStartChar = (int) strlen(conf->api_prefix);
@@ -190,6 +191,22 @@ short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 		moduleLen = (int) (module - uri);
 		module = uri;
 		module[moduleLen] = '\0';
+	}
+
+	// Get .so to execute
+	found = 0;
+	for (moduleIndex = 0; moduleIndex < conf->api_modules_number && !found; ++moduleIndex) {
+		if (strcmp(conf->api_modules[moduleIndex], module) == 0) {
+			found = 1;
+		}
+	}
+
+	if (found) {
+		evbuffer_add_printf(evb, "the module %s exists", module);
+		return 0;
+	}
+	else {
+		return -1;
 	}
 
 	return 0;
