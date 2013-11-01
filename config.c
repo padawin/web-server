@@ -36,7 +36,7 @@ int get_server_config(s_config *c)
 				module_setting = config_setting_get_elem(modules_setting, i);
 				module_name = config_setting_get_string(module_setting);
 
-				c->api_modules[i] = (char *) module_name;
+				c->api_modules[i] = module_name;
 			}
 		}
 		return CONFIG_FILE_READ_OK;

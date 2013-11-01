@@ -12,7 +12,7 @@ typedef struct {
 	int buffer_size;
 	char *buffer;
 	int api_modules_number;
-	char **api_modules;
+	const char **api_modules;
 } s_config;
 
 int get_server_config(s_config *c);
