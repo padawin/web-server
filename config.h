@@ -11,6 +11,7 @@ typedef struct {
 	const char *index_file;
 	int buffer_size;
 	char *buffer;
+	const char *api_modules_path;
 	int api_modules_number;
 	const char **api_modules;
 } s_config;
