@@ -5,6 +5,8 @@
 #include <sys/stat.h>
 #include <event.h>
 #include <evhttp.h>
+
+#include <dlfcn.h>
 #include "config.h"
 
 /**
@@ -16,6 +18,9 @@ char isAPICall(char **uri, s_config *conf);
 short web_render_file(char* uri, struct evbuffer *evb, s_config *conf);
 short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf);
 void request_handler(struct evhttp_request *req, void *conf);
+void *open_api_module(char *module_name, s_config *conf);
+int run_api_module(void *module, char *module_name, const char *callback);
+const char *get_method(struct evhttp_request *req);
 void send_reply(
 	struct evhttp_request *req,
 	struct evbuffer *evb,
@@ -154,6 +159,8 @@ short web_render_file(char* uri, struct evbuffer *evb, s_config *conf)
 
 short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 {
+	const char *cb;
+
 	char *uri, *module;
 	char found;
 	int uriStartChar, moduleLen, moduleIndex;
@@ -201,15 +208,104 @@ short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 		}
 	}
 
-	if (found) {
-		evbuffer_add_printf(evb, "the module %s exists", module);
-		return 0;
-	}
-	else {
+	if (!found) {
 		return -1;
 	}
 
+	void *loaded_module = open_api_module(module, conf);
+	if (loaded_module == NULL) {
+		return -1;
+	}
+
+	evbuffer_add_printf(evb, "the module %s exists\n", module);
+
+	// Get method
+	cb = get_method(req);
+
+	if (run_api_module(loaded_module, module, cb) != 0) {
+		return -1;
+	}
+
+	// Print the result
+	evbuffer_add_printf(evb, "%s\n", cb);
 	return 0;
+}
+
+const char *get_method(struct evhttp_request *req)
+{
+	const char *cb;
+
+	cb = 0;
+	switch (evhttp_request_get_command(req)) {
+		case EVHTTP_REQ_GET:
+			cb = "get";
+			break;
+		case EVHTTP_REQ_POST:
+			cb = "post";
+			break;
+		case EVHTTP_REQ_HEAD:
+			cb = "head";
+			break;
+		case EVHTTP_REQ_PUT:
+			cb = "put";
+			break;
+		case EVHTTP_REQ_DELETE:
+			cb = "delete";
+			break;
+		case EVHTTP_REQ_OPTIONS:
+			cb = "options";
+			break;
+		case EVHTTP_REQ_TRACE:
+			cb = "trace";
+			break;
+		case EVHTTP_REQ_CONNECT:
+			cb = "connect";
+			break;
+		case EVHTTP_REQ_PATCH:
+			cb = "patch";
+			break;
+		default:
+			break;
+	}
+
+	return cb;
+}
+
+int run_api_module(void *module, char *module_name, const char *callback)
+{
+	char *result;
+	char module_cb[strlen(callback) + 5];
+
+	typedef int (*query_f) ();
+	query_f query;
+
+	sprintf(module_cb, "%s_call", callback);
+
+	query = dlsym(module, module_cb);
+	result = dlerror();
+	if (result) {
+		printf("Cannot find %s in %s: %s", module_cb, module_name, result);
+		return -1;
+	}
+
+	query();
+
+	return 0;
+}
+
+void *open_api_module(char *module_name, s_config *conf)
+{
+	char module_file_name[80];
+	void *plugin;
+
+	sprintf(module_file_name, "%s/%s.so", conf->api_modules_path, module_name);
+	plugin = dlopen(module_file_name, RTLD_NOW);
+	if (!plugin) {
+		printf("Cannot load %s: %s\n", module_name, dlerror());
+		return NULL;
+	}
+
+	return plugin;
 }
 
 /**
