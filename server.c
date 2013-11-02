@@ -19,7 +19,7 @@ short web_render_file(char* uri, struct evbuffer *evb, s_config *conf);
 short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf);
 void request_handler(struct evhttp_request *req, void *conf);
 void *open_api_module(char *module_name, s_config *conf);
-int run_api_module(void *module, char *module_name, const char *callback);
+char *run_api_module(void *module, char *module_name, const char *callback);
 const char *get_method(struct evhttp_request *req);
 void send_reply(
 	struct evhttp_request *req,
@@ -161,7 +161,7 @@ short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 {
 	const char *cb;
 
-	char *uri, *module;
+	char *uri, *module, *response;
 	char found;
 	int uriStartChar, moduleLen, moduleIndex;
 
@@ -217,17 +217,17 @@ short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 		return -1;
 	}
 
-	evbuffer_add_printf(evb, "the module %s exists\n", module);
 
 	// Get method
 	cb = get_method(req);
 
-	if (run_api_module(loaded_module, module, cb) != 0) {
+	response = run_api_module(loaded_module, module, cb);
+	if (response == NULL) {
 		return -1;
 	}
 
 	// Print the result
-	evbuffer_add_printf(evb, "%s\n", cb);
+	evbuffer_add_printf(evb, "%s", response);
 	return 0;
 }
 
@@ -271,12 +271,12 @@ const char *get_method(struct evhttp_request *req)
 	return cb;
 }
 
-int run_api_module(void *module, char *module_name, const char *callback)
+char *run_api_module(void *module, char *module_name, const char *callback)
 {
 	char *result;
 	char module_cb[strlen(callback) + 5];
 
-	typedef int (*query_f) ();
+	typedef char *(*query_f) ();
 	query_f query;
 
 	sprintf(module_cb, "%s_call", callback);
@@ -285,12 +285,10 @@ int run_api_module(void *module, char *module_name, const char *callback)
 	result = dlerror();
 	if (result) {
 		printf("Cannot find %s in %s: %s", module_cb, module_name, result);
-		return -1;
+		return NULL;
 	}
 
-	query();
-
-	return 0;
+	return query();
 }
 
 void *open_api_module(char *module_name, s_config *conf)
