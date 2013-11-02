@@ -284,7 +284,7 @@ char *run_api_module(void *module, char *module_name, const char *callback)
 	query = dlsym(module, module_cb);
 	result = dlerror();
 	if (result) {
-		printf("Cannot find %s in %s: %s", module_cb, module_name, result);
+		printf("Cannot find %s in %s: %s\n", module_cb, module_name, result);
 		return NULL;
 	}
 
