@@ -23,7 +23,8 @@ all: $(PROG)
 	${CC} ${LDDYNAMICFLAGS} -o $@ $< -o $@
 
 clean:
-	rm -f *.o *.d *.deps $(PROG) modules/*.o modules/*.d modules/*.deps modules/*.so
+	rm $(PROG)
+	find . -name '*.o' -delete -o -name '*.d' -delete -o -name '*.deps' -delete  -o -name '*.so' -delete
 
 $(PROG): $(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
