@@ -1,12 +1,10 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-// stat call
-#include <sys/stat.h>
-#include <event.h>
 #include <evhttp.h>
 
-#include <dlfcn.h>
+
+#include "api.h"
+#include "web.h"
 #include "config.h"
 
 /**
@@ -15,12 +13,7 @@
 char _is(char **uri, const char* what, int whatLength);
 char isWebCall(char **uri, s_config *conf);
 char isAPICall(char **uri, s_config *conf);
-short web_render_file(char* uri, struct evbuffer *evb, s_config *conf);
-short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf);
 void request_handler(struct evhttp_request *req, void *conf);
-void *open_api_module(char *module_name, s_config *conf);
-char *run_api_module(void *module, char *module_name, const char *callback);
-const char *get_method(struct evhttp_request *req);
 void send_reply(
 	struct evhttp_request *req,
 	struct evbuffer *evb,
@@ -96,215 +89,7 @@ void send_reply(
 	evbuffer_free(evb);
 }
 
-/**
- * Function to render a static file in a web call
- */
-short web_render_file(char* uri, struct evbuffer *evb, s_config *conf)
-{
-	FILE* fp;
-	char *filepath, *cFilePath;
-	struct stat fs;
-	int nbChars, fInfo;
-	short rootFolderSize;
 
-	filepath = NULL;
-	cFilePath = NULL;
-	rootFolderSize = (short) strlen(conf->web_root);
-
-	nbChars = rootFolderSize + (int) strlen(uri) + 1;
-	filepath = (char*) calloc((size_t) nbChars, sizeof(char));
-
-	strcat(filepath, conf->web_root);
-	strcat(filepath, &uri[strlen(conf->web_prefix)]);
-	cFilePath = realpath(filepath, cFilePath);
-	free(filepath);
-
-	if (cFilePath == NULL || strstr(cFilePath, conf->web_root) == NULL) {
-		return -1;
-	}
-
-	// get some infos on the file
-	fInfo = stat(cFilePath, &fs);
-
-	if (fInfo == -1) {
-		// @TODO check if the file does not exist
-		// errno == ENOENT => 404
-		return -1;
-	}
-
-	if ((fs.st_mode & S_IFDIR) == S_IFDIR) {
-		const char* dFile = conf->index_file;
-		strcat(cFilePath, "/");
-		strcat(cFilePath, dFile);
-		// the new file is the index.html in the directory, let's stat again
-		fInfo = stat(cFilePath, &fs);
-	}
-
-	fp = fopen(cFilePath, "r");
-
-	if (!fp) {
-		return -1;
-	}
-
-	size_t sBuff;
-	while (!feof(fp)) {
-		sBuff = fread(conf->buffer, 1, (size_t) conf->buffer_size, fp);
-		evbuffer_add(evb, conf->buffer, sBuff);
-	}
-
-	fclose(fp);
-
-	return 0;
-}
-
-short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
-{
-	const char *cb;
-
-	char *uri, *module, *response;
-	char found;
-	int uriStartChar, moduleLen, moduleIndex;
-
-	// Remove the "/[conf->api_prefix]/" of the uri
-	uriStartChar = (int) strlen(conf->api_prefix);
-	uri = &req->uri[uriStartChar];
-
-	// no module provided, full uri like /api or /api/
-	if (
-		strlen(uri) <= 1 ||
-		// uri like ?foo
-		uri[0] == '?' ||
-		// uri like /?foo
-		uri[1] == '?' ||
-		//uri like //foo
-		uri[1] == '/'
-	) {
-		return -1;
-	}
-
-	// remove left training / in uri
-	uri = &uri[1];
-	// The module is the substring before the next /
-	module = strchr(uri, '/');
-	// or the substring before the next question mark
-	if (module == NULL) {
-		module = strchr(uri, '?');
-	}
-
-	if (module == NULL) {
-		module = uri;
-	}
-	else {
-		moduleLen = (int) (module - uri);
-		module = uri;
-		module[moduleLen] = '\0';
-	}
-
-	// Get .so to execute
-	found = 0;
-	for (moduleIndex = 0; moduleIndex < conf->api_modules_number && !found; ++moduleIndex) {
-		if (strcmp(conf->api_modules[moduleIndex], module) == 0) {
-			found = 1;
-		}
-	}
-
-	if (!found) {
-		return -1;
-	}
-
-	void *loaded_module = open_api_module(module, conf);
-	if (loaded_module == NULL) {
-		return -1;
-	}
-
-
-	// Get method
-	cb = get_method(req);
-
-	response = run_api_module(loaded_module, module, cb);
-	if (response == NULL) {
-		return -1;
-	}
-
-	// Print the result
-	evbuffer_add_printf(evb, "%s", response);
-	return 0;
-}
-
-const char *get_method(struct evhttp_request *req)
-{
-	const char *cb;
-
-	cb = 0;
-	switch (evhttp_request_get_command(req)) {
-		case EVHTTP_REQ_GET:
-			cb = "get";
-			break;
-		case EVHTTP_REQ_POST:
-			cb = "post";
-			break;
-		case EVHTTP_REQ_HEAD:
-			cb = "head";
-			break;
-		case EVHTTP_REQ_PUT:
-			cb = "put";
-			break;
-		case EVHTTP_REQ_DELETE:
-			cb = "delete";
-			break;
-		case EVHTTP_REQ_OPTIONS:
-			cb = "options";
-			break;
-		case EVHTTP_REQ_TRACE:
-			cb = "trace";
-			break;
-		case EVHTTP_REQ_CONNECT:
-			cb = "connect";
-			break;
-		case EVHTTP_REQ_PATCH:
-			cb = "patch";
-			break;
-		default:
-			break;
-	}
-
-	return cb;
-}
-
-char *run_api_module(void *module, char *module_name, const char *callback)
-{
-	char *result;
-	char module_cb[strlen(callback) + 5];
-
-	typedef char *(*query_f) ();
-	query_f query;
-
-	sprintf(module_cb, "%s_call", callback);
-
-	query = dlsym(module, module_cb);
-	result = dlerror();
-	if (result) {
-		printf("Cannot find %s in %s: %s\n", module_cb, module_name, result);
-		return NULL;
-	}
-
-	return query();
-}
-
-void *open_api_module(char *module_name, s_config *conf)
-{
-	char module_file_name[80];
-	void *plugin;
-
-	sprintf(module_file_name, "%s/%s.so", conf->api_modules_path, module_name);
-	plugin = dlopen(module_file_name, RTLD_NOW);
-	if (!plugin) {
-		printf("Cannot load %s: %s\n", module_name, dlerror());
-		return NULL;
-	}
-
-	return plugin;
-}
 
 /**
  * Function to know if a request starts with the what parameter.
