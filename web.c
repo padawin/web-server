@@ -10,7 +10,7 @@
 /**
  * Function to render a static file in a web call
  */
-short web_render_file(char* uri, struct evbuffer *evb, s_config *conf)
+short web_render_file(const char* uri, struct evbuffer *evb, s_config *conf)
 {
 	FILE* fp;
 	char *filepath, *cFilePath;

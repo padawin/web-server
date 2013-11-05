@@ -118,7 +118,7 @@ const char *get_method(struct evhttp_request *req)
 	return cb;
 }
 
-char *run_api_module(void *module, char *module_name, const char *callback)
+char *run_api_module(void *module, const char *module_name, const char *callback)
 {
 	const unsigned short int cb_size = 13;
 	char *result;
@@ -139,7 +139,7 @@ char *run_api_module(void *module, char *module_name, const char *callback)
 	return query();
 }
 
-void *open_api_module(char *module_name, s_config *conf)
+void *open_api_module(const char *module_name, s_config *conf)
 {
 	char module_file_name[80];
 	void *plugin;
