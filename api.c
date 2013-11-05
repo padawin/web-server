@@ -59,16 +59,16 @@ short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 		return -1;
 	}
 
-	void *loaded_module = open_api_module(module, conf);
+	void *loaded_module = api_open_module(module, conf);
 	if (loaded_module == NULL) {
 		return -1;
 	}
 
 
 	// Get method
-	cb = get_method(req);
+	cb = api_get_method(req);
 
-	response = run_api_module(loaded_module, module, cb);
+	response = api_run_module(loaded_module, module, cb);
 	if (response == NULL) {
 		return -1;
 	}
@@ -78,7 +78,7 @@ short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 	return 0;
 }
 
-const char *get_method(struct evhttp_request *req)
+const char *api_get_method(struct evhttp_request *req)
 {
 	const char *cb;
 
@@ -118,7 +118,7 @@ const char *get_method(struct evhttp_request *req)
 	return cb;
 }
 
-char *run_api_module(void *module, const char *module_name, const char *callback)
+char *api_run_module(void *module, const char *module_name, const char *callback)
 {
 	const unsigned short int cb_size = 13;
 	char *result;
@@ -139,7 +139,7 @@ char *run_api_module(void *module, const char *module_name, const char *callback
 	return query();
 }
 
-void *open_api_module(const char *module_name, s_config *conf)
+void *api_open_module(const char *module_name, s_config *conf)
 {
 	char module_file_name[80];
 	void *plugin;
