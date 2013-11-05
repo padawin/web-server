@@ -120,13 +120,14 @@ const char *get_method(struct evhttp_request *req)
 
 char *run_api_module(void *module, char *module_name, const char *callback)
 {
+	const unsigned short int cb_size = 13;
 	char *result;
-	char module_cb[strlen(callback) + 5];
+	char module_cb[13];
 
 	typedef char *(*query_f) ();
 	query_f query;
 
-	sprintf(module_cb, "%s_call", callback);
+	snprintf(module_cb, cb_size, "%s_call", callback);
 
 	query = dlsym(module, module_cb);
 	result = dlerror();
