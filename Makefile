@@ -1,8 +1,8 @@
 PROG   := server
 CC     := gcc
 CFLAGS := -g -O2 -Wall -Wextra -Wwrite-strings -Wformat=2 -Wconversion -Wmissing-declarations -Wmissing-prototypes
-LDFLAGS:= -levent -lconfig -ldl
-CCDYNAMICFLAGS := ${CFLAGS} -fPIC
+LDFLAGS:= -levent -lconfig -ldl -lmap
+CCDYNAMICFLAGS := ${CFLAGS} ${LDFLAGS} -fPIC
 LDDYNAMICFLAGS := -shared
 
 SRC := $(wildcard *.c)

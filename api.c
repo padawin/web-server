@@ -10,8 +10,7 @@ short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 	const char *cb;
 
 	char *uri, *module, *response;
-	char found;
-	int uriStartChar, moduleLen, moduleIndex;
+	int uriStartChar, moduleLen;
 
 	// Remove the "/[conf->api_prefix]/" of the uri
 	uriStartChar = (int) strlen(conf->api_prefix);
@@ -49,22 +48,10 @@ short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 	}
 
 	// Get .so to execute
-	found = 0;
-	for (moduleIndex = 0; moduleIndex < conf->api_modules_number && !found; ++moduleIndex) {
-		if (strcmp(conf->api_modules[moduleIndex], module) == 0) {
-			found = 1;
-		}
-	}
-
-	if (!found) {
-		return -1;
-	}
-
-	void *loaded_module = api_open_module(module, conf);
+	void *loaded_module = map_get_entry(module, &conf->api_modules);
 	if (loaded_module == NULL) {
 		return -1;
 	}
-
 
 	// Get method
 	cb = api_get_method(req);
