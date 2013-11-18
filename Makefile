@@ -1,7 +1,7 @@
 PROG   := server
 CC     := gcc
 CFLAGS := -g -O2 -Wall -Wextra -Wwrite-strings -Wformat=2 -Wconversion -Wmissing-declarations -Wmissing-prototypes
-LDFLAGS:= -levent -lconfig -ldl
+LDFLAGS:= -levent -lconfig -ldl -lmap
 CCDYNAMICFLAGS := ${CFLAGS} -fPIC
 LDDYNAMICFLAGS := -shared
 

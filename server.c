@@ -2,9 +2,12 @@
 #include <string.h>
 #include <evhttp.h>
 
+// From https://github.com/padawin/map-structure-implementation
+#include <map.h>
 
 #include "api.h"
 #include "web.h"
+
 #include "config.h"
 
 /**
