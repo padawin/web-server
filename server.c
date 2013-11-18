@@ -156,7 +156,6 @@ int main()
 		exit(1);
 	}
 
-	c->buffer = (char*) calloc((size_t) c->buffer_size, sizeof(char));
 	load_api_modules(c);
 
 	http_server = NULL;

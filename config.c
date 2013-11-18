@@ -46,6 +46,9 @@ int get_server_config(s_config *c)
 
 			map_init(&c->api_modules, c->api_modules_number);
 		}
+
+		c->buffer = (char*) calloc((size_t) c->buffer_size, sizeof(char));
+
 		return CONFIG_FILE_READ_OK;
 	}
 	else
