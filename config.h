@@ -4,6 +4,7 @@
 #define CONFIG_FILE_READ_OK 0
 #define CONFIG_FILE_READ_ERROR -1
 #define CONFIG_MISSING_KEY -2
+#define CONFIG_INCONSISTENT_DATA -3
 
 typedef struct {
 	int port;
