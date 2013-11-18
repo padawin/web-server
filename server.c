@@ -155,7 +155,7 @@ int main()
 	event_dispatch();
 
 	free(c->buffer);
-	free(c->api_modules);
+	free(c->api_modules_names);
 
 	return 0;
 }

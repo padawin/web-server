@@ -36,12 +36,12 @@ int get_server_config(s_config *c)
 			else if (count == 0)
 				return CONFIG_FILE_READ_OK;
 
-			c->api_modules = malloc(count * sizeof(char*));
+			c->api_modules_names = malloc(count * sizeof(char*));
 			for (i = 0; i < count; ++i) {
 				module_setting = config_setting_get_elem(modules_setting, i);
 				module_name = config_setting_get_string(module_setting);
 
-				c->api_modules[i] = module_name;
+				c->api_modules_names[i] = module_name;
 			}
 		}
 		return CONFIG_FILE_READ_OK;

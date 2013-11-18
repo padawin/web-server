@@ -17,7 +17,7 @@ typedef struct {
 	char *buffer;
 	const char *api_modules_path;
 	int api_modules_number;
-	const char **api_modules;
+	const char **api_modules_names;
 } s_config;
 
 int get_server_config(s_config *c);

@@ -51,7 +51,7 @@ short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 	// Get .so to execute
 	found = 0;
 	for (moduleIndex = 0; moduleIndex < conf->api_modules_number && !found; ++moduleIndex) {
-		if (strcmp(conf->api_modules[moduleIndex], module) == 0) {
+		if (strcmp(conf->api_modules_names[moduleIndex], module) == 0) {
 			found = 1;
 		}
 	}
