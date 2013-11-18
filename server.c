@@ -17,6 +17,7 @@ char _is(char **uri, const char* what, int whatLength);
 char isWebCall(char **uri, s_config *conf);
 char isAPICall(char **uri, s_config *conf);
 void request_handler(struct evhttp_request *req, void *conf);
+void load_api_modules(s_config *conf);
 void send_reply(
 	struct evhttp_request *req,
 	struct evbuffer *evb,
@@ -120,6 +121,26 @@ char isAPICall(char **uri, s_config *conf)
 	return _is(uri, conf->api_prefix, (int) strlen(conf->api_prefix));
 }
 
+/**
+ * Function to load in memory all the declared api modules, from the
+ * configuration.
+ *
+ * @param void *conf the configuration
+ * @return void
+ */
+void load_api_modules(s_config *conf)
+{
+	int m;
+
+	for (m = 0; m < conf->api_modules_number; ++m) {
+		map_add_entry(
+			conf->api_modules_names[m],
+			api_open_module(conf->api_modules_names[m], conf),
+			&conf->api_modules
+		);
+	}
+}
+
 int main()
 {
 	int http_port;
@@ -136,6 +157,7 @@ int main()
 	}
 
 	c->buffer = (char*) calloc((size_t) c->buffer_size, sizeof(char));
+	load_api_modules(c);
 
 	http_server = NULL;
 	http_addr = c->host;
@@ -156,6 +178,7 @@ int main()
 
 	free(c->buffer);
 	free(c->api_modules_names);
+	map_free(&c->api_modules);
 
 	return 0;
 }

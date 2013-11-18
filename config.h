@@ -1,6 +1,8 @@
 #ifndef CONFIG_INCLUDED
 #define CONFIG_INCLUDED
 
+#include <map.h>
+
 #define CONFIG_FILE_READ_OK 0
 #define CONFIG_FILE_READ_ERROR -1
 #define CONFIG_MISSING_KEY -2
@@ -18,6 +20,7 @@ typedef struct {
 	const char *api_modules_path;
 	int api_modules_number;
 	const char **api_modules_names;
+	map api_modules;
 } s_config;
 
 int get_server_config(s_config *c);

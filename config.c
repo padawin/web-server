@@ -43,6 +43,8 @@ int get_server_config(s_config *c)
 
 				c->api_modules_names[i] = module_name;
 			}
+
+			map_init(&c->api_modules, c->api_modules_number);
 		}
 		return CONFIG_FILE_READ_OK;
 	}
