@@ -31,6 +31,10 @@ int get_server_config(s_config *c)
 		modules_setting = config_lookup(&cfg, "api_modules");
 		if (modules_setting != NULL) {
 			count = (unsigned int) config_setting_length(modules_setting);
+			if (count != (unsigned int) c->api_modules_number)
+				return CONFIG_INCONSISTENT_DATA;
+			else if (count == 0)
+				return CONFIG_FILE_READ_OK;
 
 			c->api_modules = malloc(count * sizeof(char*));
 			for (i = 0; i < count; ++i) {
