@@ -1,4 +1,4 @@
-#if !defined(CONFIG_INCLUDED)
+#ifndef CONFIG_INCLUDED
 #define CONFIG_INCLUDED
 
 #define CONFIG_FILE_READ_OK 0
