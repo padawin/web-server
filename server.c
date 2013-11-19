@@ -1,10 +1,13 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-// stat call
-#include <sys/stat.h>
-#include <event.h>
 #include <evhttp.h>
+
+// From https://github.com/padawin/map-structure-implementation
+#include <map.h>
+
+#include "api.h"
+#include "web.h"
+
 #include "config.h"
 
 /**
@@ -13,8 +16,8 @@
 char _is(char **uri, const char* what, int whatLength);
 char isWebCall(char **uri, s_config *conf);
 char isAPICall(char **uri, s_config *conf);
-short web_render_file(char* uri, struct evbuffer *evb, s_config *conf);
 void request_handler(struct evhttp_request *req, void *conf);
+void load_api_modules(s_config *conf);
 void send_reply(
 	struct evhttp_request *req,
 	struct evbuffer *evb,
@@ -53,9 +56,16 @@ void request_handler(struct evhttp_request *req, void *conf)
 		}
 	}
 	else if (isAPICall(&req->uri, conf)) {
-		evbuffer_add_printf(evb, "api");
-		responseStatus = HTTP_OK;
-		responseStatusText = "OK";
+		short result = api_cb(req, evb, conf);
+
+		if (result < 0) {
+			responseStatus = HTTP_NOTFOUND;
+			responseStatusText = "Not found";
+		}
+		else {
+			responseStatus = HTTP_OK;
+			responseStatusText = "OK";
+		}
 	}
 	else {
 		responseStatus = HTTP_NOTFOUND;
@@ -83,66 +93,7 @@ void send_reply(
 	evbuffer_free(evb);
 }
 
-/**
- * Function to render a static file in a web call
- */
-short web_render_file(char* uri, struct evbuffer *evb, s_config *conf)
-{
-	FILE* fp;
-	char *filepath, *cFilePath;
-	struct stat fs;
-	int nbChars, fInfo;
-	short rootFolderSize;
 
-	filepath = NULL;
-	cFilePath = NULL;
-	rootFolderSize = (short) strlen(conf->web_root);
-
-	nbChars = rootFolderSize + (int) strlen(uri) + 1;
-	filepath = (char*) calloc((size_t) nbChars, sizeof(char));
-
-	strcat(filepath, conf->web_root);
-	strcat(filepath, &uri[strlen(conf->web_prefix)]);
-	cFilePath = realpath(filepath, cFilePath);
-	free(filepath);
-
-	if (cFilePath == NULL || strstr(cFilePath, conf->web_root) == NULL) {
-		return -1;
-	}
-
-	// get some infos on the file
-	fInfo = stat(cFilePath, &fs);
-
-	if (fInfo == -1) {
-		// @TODO check if the file does not exist
-		// errno == ENOENT => 404
-		return -1;
-	}
-
-	if ((fs.st_mode & S_IFDIR) == S_IFDIR) {
-		const char* dFile = conf->index_file;
-		strcat(cFilePath, "/");
-		strcat(cFilePath, dFile);
-		// the new file is the index.html in the directory, let's stat again
-		fInfo = stat(cFilePath, &fs);
-	}
-
-	fp = fopen(cFilePath, "r");
-
-	if (!fp) {
-		return -1;
-	}
-
-	size_t sBuff;
-	while (!feof(fp)) {
-		sBuff = fread(conf->buffer, 1, (size_t) conf->buffer_size, fp);
-		evbuffer_add(evb, conf->buffer, sBuff);
-	}
-
-	fclose(fp);
-
-	return 0;
-}
 
 /**
  * Function to know if a request starts with the what parameter.
@@ -151,7 +102,7 @@ short web_render_file(char* uri, struct evbuffer *evb, s_config *conf)
  */
 char _is(char **uri, const char* what, int whatLength)
 {
-	return strstr(*uri, what) - *uri == 0 && ((*uri)[whatLength] == '\0' || (*uri)[whatLength] == '/');
+	return strstr(*uri, what) - *uri == 0 && ((*uri)[whatLength] == '\0' || (*uri)[whatLength] == '/' || (*uri)[whatLength] == '?');
 }
 
 /**
@@ -170,6 +121,26 @@ char isAPICall(char **uri, s_config *conf)
 	return _is(uri, conf->api_prefix, (int) strlen(conf->api_prefix));
 }
 
+/**
+ * Function to load in memory all the declared api modules, from the
+ * configuration.
+ *
+ * @param void *conf the configuration
+ * @return void
+ */
+void load_api_modules(s_config *conf)
+{
+	int m;
+
+	for (m = 0; m < conf->api_modules_number; ++m) {
+		map_add_entry(
+			conf->api_modules_names[m],
+			api_open_module(conf->api_modules_names[m], conf),
+			&conf->api_modules
+		);
+	}
+}
+
 int main()
 {
 	int http_port;
@@ -185,7 +156,7 @@ int main()
 		exit(1);
 	}
 
-	c->buffer = (char*) calloc((size_t) c->buffer_size, sizeof(char));
+	load_api_modules(c);
 
 	http_server = NULL;
 	http_addr = c->host;
@@ -205,6 +176,8 @@ int main()
 	event_dispatch();
 
 	free(c->buffer);
+	free(c->api_modules_names);
+	map_free(&c->api_modules);
 
 	return 0;
 }
