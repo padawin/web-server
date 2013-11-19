@@ -5,6 +5,14 @@
 #include <evhttp.h>
 #include "api.h"
 
+/**
+ * Function used as a callback to be called when a request to the API is received
+ *
+ * @param struct evhttp_request *req The request
+ * @param struct evbuffer *evb The response buffer
+ * @param s_config *conf The server configuration
+ * @return short 0 if everything went fine, -1 else
+ */
 short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 {
 	const char *cb;
@@ -66,6 +74,12 @@ short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 	return 0;
 }
 
+/**
+ * Function to get the request HTTP method
+ *
+ * @param struct evhttp_request *req The request
+ * @return const char* The method name
+ */
 const char *api_get_method(struct evhttp_request *req)
 {
 	const char *cb;
@@ -106,6 +120,19 @@ const char *api_get_method(struct evhttp_request *req)
 	return cb;
 }
 
+/**
+ * Function to run the desired API module.
+ * The function is defined from the request method.
+ * For example a get method will try to call get_call()
+ *
+ * @param void *module The requested module
+ * @param const char *module_name The requested module name, used only when an
+ * 		error occurs
+ * @param const char *callback The method name, from that, the function name will
+ * 		be defined.
+ * @return char* The return value of the called function. Or null if the function
+ * 		does not exist.
+ */
 char *api_run_module(void *module, const char *module_name, const char *callback)
 {
 	const unsigned short int cb_size = 13;
@@ -127,6 +154,13 @@ char *api_run_module(void *module, const char *module_name, const char *callback
 	return query();
 }
 
+/**
+ * Function to open a .so module from its name.
+ *
+ * @param const char *module_name The module name
+ * @param s_config *conf The server configuration
+ * @return void* The loaded module
+ */
 void *api_open_module(const char *module_name, s_config *conf)
 {
 	char module_file_name[80];

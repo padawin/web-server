@@ -9,6 +9,11 @@
 
 /**
  * Function to render a static file in a web call
+ *
+ * @param const char* uri The requested URI
+ * @param struct evbuffer *evb The request buffer
+ * @param s_config *conf The server configuration
+ * @return short 0 if everything went fine, -1 else
  */
 short web_render_file(const char* uri, struct evbuffer *evb, s_config *conf)
 {
