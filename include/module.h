@@ -1,0 +1,11 @@
+char *get_call(void);
+char *post_call(void);
+char *get_call(void);
+char *post_call(void);
+char *head_call(void);
+char *put_call(void);
+char *delete_call(void);
+char *options_call(void);
+char *trace_call(void);
+char *connect_call(void);
+char *patch_call(void);
