@@ -10,6 +10,8 @@
 
 #include "config.h"
 
+#define APP_NAME "zish"
+
 /**
  * Signatures
  */
@@ -18,6 +20,7 @@ char isWebCall(char **uri, s_config *conf);
 char isAPICall(char **uri, s_config *conf);
 void request_handler(struct evhttp_request *req, void *conf);
 void load_api_modules(s_config *conf);
+void get_configuration_filepath(char *path, const unsigned short int path_size);
 void send_reply(
 	struct evhttp_request *req,
 	struct evbuffer *evb,
@@ -141,6 +144,18 @@ void load_api_modules(s_config *conf)
 	}
 }
 
+/**
+ * Function to get the path to the default configuration file to use
+ *
+ * @param char *path String where the config path will be stored
+ * @param const unsigned short int path_size Total path size
+ * @return void
+ */
+void get_configuration_filepath(char *path, const unsigned short int path_size)
+{
+	snprintf(path, path_size, "/etc/%s/%s.conf", APP_NAME, APP_NAME);
+}
+
 int main()
 {
 	int http_port;
@@ -150,8 +165,13 @@ int main()
 
 	c = (s_config*) malloc(sizeof(s_config));
 
+	const unsigned short int path_size = 50;
+	char conf_path[path_size];
+
+	get_configuration_filepath(conf_path, path_size);
+
 	int confRet;
-	if ((confRet = get_server_config(c)) != CONFIG_FILE_READ_OK) {
+	if ((confRet = get_server_config(c, conf_path)) != CONFIG_FILE_READ_OK) {
 		fprintf(stderr, "Error while reading the configuration file, error %d\n", confRet);
 		exit(1);
 	}

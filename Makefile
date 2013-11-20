@@ -1,3 +1,4 @@
+APPNAME:= zish
 PROG   := server
 CC     := gcc
 INCL   := module.h
@@ -12,6 +13,7 @@ SRC := $(wildcard *.c)
 OBJ := $(patsubst %.c,%.o,$(SRC))
 DEP := $(patsubst %.c,%.deps,$(SRC))
 
+APPDIR=$(DESTDIR)/etc/$(APPNAME)
 INCLDIR=$(DESTDIR)/usr/include
 
 all: $(PROG)
@@ -29,6 +31,8 @@ all: $(PROG)
 
 install:
 	$(INSTALL) include/$(INCL) $(INCLDIR)/webserver/$(INCL)
+	$(INSTALL) config.conf $(APPDIR)/$(APPNAME).conf
+
 
 clean:
 	rm $(PROG)

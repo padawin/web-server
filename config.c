@@ -2,7 +2,7 @@
 #include "config.h"
 #include <libconfig.h>
 
-int get_server_config(s_config *c)
+int get_server_config(s_config *c, char *config_path)
 {
 	config_t cfg;
 	config_setting_t *modules_setting, *module_setting;
@@ -11,7 +11,7 @@ int get_server_config(s_config *c)
 
 	config_init(&cfg);
 
-	if (!config_read_file(&cfg, "config.cfg")) {
+	if (!config_read_file(&cfg, config_path)) {
 		config_destroy(&cfg);
 		return CONFIG_FILE_READ_ERROR;
 	}
