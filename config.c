@@ -11,7 +11,7 @@ int get_server_config(s_config *c)
 
 	config_init(&cfg);
 
-	if (!config_read_file(&cfg, "config.cfg")) {
+	if (!config_read_file(&cfg, "config.conf")) {
 		config_destroy(&cfg);
 		return CONFIG_FILE_READ_ERROR;
 	}
