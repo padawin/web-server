@@ -1,5 +1,6 @@
 // For dlopen
 #include <dlfcn.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <evhttp.h>
@@ -17,8 +18,11 @@ short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 {
 	const char *cb;
 
-	char *uri, *module, *response;
-	int uriStartChar, moduleLen;
+	char *uri, *params, *module, *response;
+	int uriStartChar;
+	long unsigned int moduleLen;
+	struct evkeyvalq *headers;
+	struct evkeyval *header;
 
 	// Remove the "/[conf->api_prefix]/" of the uri
 	uriStartChar = (int) strlen(conf->api_prefix);
@@ -40,31 +44,43 @@ short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 	// remove left training / in uri
 	uri = &uri[1];
 	// The module is the substring before the next /
-	module = strchr(uri, '/');
+	params = strchr(uri, '/');
 	// or the substring before the next question mark
-	if (module == NULL) {
-		module = strchr(uri, '?');
+	if (params == NULL) {
+		params = strchr(uri, '?');
 	}
 
-	if (module == NULL) {
-		module = uri;
-	}
-	else {
-		moduleLen = (int) (module - uri);
-		module = uri;
-		module[moduleLen] = '\0';
-	}
+	if (params == NULL)
+		moduleLen = strlen(uri);
+	else
+		moduleLen = (long unsigned int) (params - uri);
+
+	module = calloc(moduleLen, sizeof(char *));
+	strncpy(module, uri, moduleLen);
 
 	// Get .so to execute
 	void *loaded_module = map_get_entry(module, &conf->api_modules);
 	if (loaded_module == NULL) {
+		free(module);
 		return -1;
+	}
+
+	// get arguments
+	if (params != NULL) {
+		params = &params[1];
+		headers = malloc(sizeof(struct evkeyvalq*));
+		evhttp_parse_query_str(params, headers);
+		for (header = headers->tqh_first; header; header = header->next.tqe_next) {
+			printf("--%s \"%s\"\n", header->key, header->value);
+		}
+		free(headers);
 	}
 
 	// Get method
 	cb = api_get_method(req);
 
 	response = api_run_module(loaded_module, module, cb);
+	free(module);
 	if (response == NULL) {
 		return -1;
 	}
