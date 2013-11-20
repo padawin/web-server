@@ -137,7 +137,7 @@ char *api_run_module(void *module, const char *module_name, const char *callback
 {
 	const unsigned short int cb_size = 13;
 	char *result;
-	char module_cb[13];
+	char module_cb[cb_size];
 
 	typedef char *(*query_f) ();
 	query_f query;
