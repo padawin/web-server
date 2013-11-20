@@ -7,7 +7,6 @@
 
 #include "api.h"
 #include "web.h"
-
 #include "config.h"
 
 #define APP_NAME "zish"
