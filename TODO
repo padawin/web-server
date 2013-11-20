@@ -1,0 +1,4 @@
+- Cache
+- Set params from command arguments
+- handle uri parameters
+- move the web part in an API module
