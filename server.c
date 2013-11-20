@@ -144,6 +144,13 @@ void load_api_modules(s_config *conf)
 	}
 }
 
+/**
+ * Function to get the path to the default configuration file to use
+ *
+ * @param char *path String where the config path will be stored
+ * @param const unsigned short int path_size Total path size
+ * @return void
+ */
 void get_configuration_filepath(char *path, const unsigned short int path_size)
 {
 	snprintf(path, path_size, "/etc/%s/%s.conf", APP_NAME, APP_NAME);
