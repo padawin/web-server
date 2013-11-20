@@ -10,6 +10,8 @@
 
 #include "config.h"
 
+#define APP_NAME "zish"
+
 /**
  * Signatures
  */
@@ -144,7 +146,7 @@ void load_api_modules(s_config *conf)
 
 void get_configuration_filepath(char *path, const unsigned short int path_size)
 {
-	snprintf(path, path_size, "config.conf");
+	snprintf(path, path_size, "/etc/%s/%s.conf", APP_NAME, APP_NAME);
 }
 
 int main()
