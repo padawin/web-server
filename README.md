@@ -33,13 +33,13 @@ To use the web part, you'll need a web folder and its path must be in the
 web_root variable in the config.cfg.
 
 For example if you have in your web folder a test.html file, you can serve it:
-http://localhost:9999/web/test.html
+http://localhost:port/web/test.html
 
 ### API
 
 ## Description
 
-To use the API part, you'll need to call http://localhost:9999/api
+To use the API part, you'll need to call http://localhost:port/api
 
 The api uses .so modules. The modules must be stored in the directory defined in
 configuration key 'api_modules_path'.
@@ -96,4 +96,4 @@ To use a module, it must be registered in the configuration file in the key
 api_modules_number = 2;
 api_modules: ("foo", "bar");
 ```
-And then restart the server.
+And then restart the server and call http://localhost:port/api/%modulename%
