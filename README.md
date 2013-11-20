@@ -12,12 +12,12 @@ Provides an API and a web access.
 
 ## Usage
 
-
 In config.cfg, change the values to match your environment.
 
 Compile it:
 ```
 make
+make install
 ```
 
 ## Usage
@@ -37,8 +37,63 @@ http://localhost:9999/web/test.html
 
 ### API
 
+## Description
+
 To use the API part, you'll need to call http://localhost:9999/api
 
-This section is not implemented yet.
+The api uses .so modules. The modules must be stored in the directory defined in
+configuration key 'api_modules_path'.
 
+A module must have this include:
+```
+#include "webserver/module.h"
+```
 
+This provides the signatures for the functions:
+```
+* char *get_call(void);
+* char *post_call(void);
+* char *get_call(void);
+* char *post_call(void);
+* char *head_call(void);
+* char *put_call(void);
+* char *delete_call(void);
+* char *options_call(void);
+* char *trace_call(void);
+* char *connect_call(void);
+* char *patch_call(void);
+* char *get_call(void);
+* char *post_call(void);
+* char *get_call(void);
+* char *post_call(void);
+* char *head_call(void);
+* char *put_call(void);
+* char *delete_call(void);
+* char *options_call(void);
+* char *trace_call(void);
+* char *connect_call(void);
+* char *patch_call(void);
+```
+
+Which are called depending on the HTTP request method.
+The functions' return values are the response body.
+
+## Compilation
+
+To compile a module, use the server's Makefile:
+```
+make /path/to/your/module.so
+```
+
+The module's source must be in /path/to/your/module.c.
+
+## Usage
+
+To use a module, it must be registered in the configuration file in the key
+'api_modules' and 'api_modules_number'. For example, if you have two modules
+"foo.so" and "bar.so", your configuration file must look like:
+```
+api_modules_number = 2;
+api_modules: ("foo", "bar");
+```
+And then restart the server.
