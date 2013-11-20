@@ -6,7 +6,9 @@ Provides an API and a web access.
 
 ## Requirements
 
-libevent-dev
+* libevent-dev
+* libconfig-dev
+* libmap (https://github.com/padawin/map-structure-implementation)
 
 ## Usage
 
