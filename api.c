@@ -6,6 +6,9 @@
 #include <evhttp.h>
 #include "api.h"
 
+// Limit to 255 the total number of parameters, which is already huge...
+#define TOTAL_PARAMS_NUMBER 255
+
 short decompose_uri(const char *uri, s_config *conf, char *module, char *params);
 
 /**
