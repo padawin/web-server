@@ -4,3 +4,4 @@
 - move the web part in an API module
 - Convert to daemon
 - use of errno
+- Use good HTTP codes, instead of only 404/200
