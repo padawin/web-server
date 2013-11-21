@@ -3,3 +3,4 @@
 - handle uri parameters
 - move the web part in an API module
 - Convert to daemon
+- use of errno
