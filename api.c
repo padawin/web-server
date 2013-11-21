@@ -76,7 +76,7 @@ short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 short decompose_uri(const char *uri, s_config *conf, char *module, char *params)
 {
 	int uriStartChar;
-	char *reduced_uri;
+	char *reduced_uri, *p;
 	long unsigned int moduleLen;
 
 	// Remove the "/[conf->api_prefix]/" of the uri
@@ -99,16 +99,18 @@ short decompose_uri(const char *uri, s_config *conf, char *module, char *params)
 	// remove left training / in uri
 	reduced_uri = &reduced_uri[1];
 	// The module is the substring before the next /
-	params = strchr(reduced_uri, '/');
+	p = strchr(reduced_uri, '/');
 	// or the substring before the next question mark
-	if (params == NULL) {
-		params = strchr(reduced_uri, '?');
+	if (p == NULL) {
+		p = strchr(reduced_uri, '?');
 	}
 
-	if (params == NULL)
+	if (p == NULL)
 		moduleLen = strlen(reduced_uri);
-	else
-		moduleLen = (long unsigned int) (params - reduced_uri);
+	else {
+		moduleLen = (long unsigned int) (p - reduced_uri);
+		strncpy(params, p, strlen(p));
+	}
 
 	//~module = calloc(moduleLen, sizeof(char *));
 	strncpy(module, reduced_uri, moduleLen);
