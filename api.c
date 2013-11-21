@@ -58,7 +58,7 @@ short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 	// Get method
 	cb = api_get_method(req);
 
-	response = api_run_module(loaded_module, module, cb);
+	response = api_run_module(loaded_module, module, cb, &params_map);
 	free(module);
 	free(params);
 	map_free(&params_map);
@@ -180,10 +180,11 @@ const char *api_get_method(struct evhttp_request *req)
  * 		error occurs
  * @param const char *callback The method name, from that, the function name will
  * 		be defined.
+ * @param const map* Map of the request parameters
  * @return char* The return value of the called function. Or null if the function
  * 		does not exist.
  */
-char *api_run_module(void *module, const char *module_name, const char *callback)
+char *api_run_module(void *module, const char *module_name, const char *callback, const map *params)
 {
 	const unsigned short int cb_size = 13;
 	char *result;
@@ -201,7 +202,7 @@ char *api_run_module(void *module, const char *module_name, const char *callback
 		return NULL;
 	}
 
-	return query();
+	return query(params);
 }
 
 /**

@@ -1,11 +1,13 @@
-char *get_call(void);
-char *post_call(void);
-char *get_call(void);
-char *post_call(void);
-char *head_call(void);
-char *put_call(void);
-char *delete_call(void);
-char *options_call(void);
-char *trace_call(void);
-char *connect_call(void);
-char *patch_call(void);
+#include <map.h>
+
+char *get_call(map *params);
+char *post_call(map *params);
+char *get_call(map *params);
+char *post_call(map *params);
+char *head_call(map *params);
+char *put_call(map *params);
+char *delete_call(map *params);
+char *options_call(map *params);
+char *trace_call(map *params);
+char *connect_call(map *params);
+char *patch_call(map *params);
