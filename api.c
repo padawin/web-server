@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <evhttp.h>
+#include <map.h>
 #include "api.h"
 
 // Limit to 255 the total number of parameters, which is already huge...
@@ -27,6 +28,7 @@ short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 	short detect_module_result;
 	struct evkeyvalq *headers;
 	struct evkeyval *header;
+	map params_map;
 
 	module = calloc(1, sizeof(char *));
 	params = calloc(1, sizeof(char *));
@@ -42,12 +44,13 @@ short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 		return -1;
 	}
 
+	map_init(&params_map, TOTAL_PARAMS_NUMBER);
 	// get arguments
 	if (params != NULL) {
 		headers = malloc(sizeof(struct evkeyvalq*));
 		evhttp_parse_query_str(&params[1], headers);
 		for (header = headers->tqh_first; header; header = header->next.tqe_next) {
-			printf("--%s \"%s\"\n", header->key, header->value);
+			map_add_entry(header->key, header->value, &params_map);
 		}
 		free(headers);
 	}
@@ -58,6 +61,7 @@ short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 	response = api_run_module(loaded_module, module, cb);
 	free(module);
 	free(params);
+	map_free(&params_map);
 	if (response == NULL) {
 		return -1;
 	}
