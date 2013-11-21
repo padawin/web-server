@@ -6,6 +6,8 @@
 #include <evhttp.h>
 #include "api.h"
 
+short decompose_uri(const char *uri, s_config *conf, char *module, char *params);
+
 /**
  * Function used as a callback to be called when a request to the API is received
  *
@@ -18,58 +20,29 @@ short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 {
 	const char *cb;
 
-	char *uri, *params, *module, *response;
-	int uriStartChar;
-	long unsigned int moduleLen;
+	char *params, *module, *response;
+	short detect_module_result;
 	struct evkeyvalq *headers;
 	struct evkeyval *header;
 
-	// Remove the "/[conf->api_prefix]/" of the uri
-	uriStartChar = (int) strlen(conf->api_prefix);
-	uri = &req->uri[uriStartChar];
-
-	// no module provided, full uri like /api or /api/
-	if (
-		strlen(uri) <= 1 ||
-		// uri like ?foo
-		uri[0] == '?' ||
-		// uri like /?foo
-		uri[1] == '?' ||
-		//uri like //foo
-		uri[1] == '/'
-	) {
-		return -1;
+	module = calloc(1, sizeof(char *));
+	params = calloc(1, sizeof(char *));
+	if ((detect_module_result = decompose_uri(req->uri, conf, module, params)) != 0) {
+		return detect_module_result;
 	}
-
-	// remove left training / in uri
-	uri = &uri[1];
-	// The module is the substring before the next /
-	params = strchr(uri, '/');
-	// or the substring before the next question mark
-	if (params == NULL) {
-		params = strchr(uri, '?');
-	}
-
-	if (params == NULL)
-		moduleLen = strlen(uri);
-	else
-		moduleLen = (long unsigned int) (params - uri);
-
-	module = calloc(moduleLen, sizeof(char *));
-	strncpy(module, uri, moduleLen);
 
 	// Get .so to execute
 	void *loaded_module = map_get_entry(module, &conf->api_modules);
 	if (loaded_module == NULL) {
 		free(module);
+		free(params);
 		return -1;
 	}
 
 	// get arguments
 	if (params != NULL) {
-		params = &params[1];
 		headers = malloc(sizeof(struct evkeyvalq*));
-		evhttp_parse_query_str(params, headers);
+		evhttp_parse_query_str(&params[1], headers);
 		for (header = headers->tqh_first; header; header = header->next.tqe_next) {
 			printf("--%s \"%s\"\n", header->key, header->value);
 		}
@@ -81,12 +54,66 @@ short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 
 	response = api_run_module(loaded_module, module, cb);
 	free(module);
+	free(params);
 	if (response == NULL) {
 		return -1;
 	}
 
 	// Print the result
 	evbuffer_add_printf(evb, "%s", response);
+	return 0;
+}
+
+/**
+ * Function to extract the module name and the parameters from the uri.
+ *
+ * @param const char *uri The uri to analyse
+ * @param s_config *conf The server configuration
+ * @param char *module Variable where the module name will be stored
+ * @param char *params Variable where the params string will be stored
+ * @return short 0 if everything went fine, -1 else
+ */
+short decompose_uri(const char *uri, s_config *conf, char *module, char *params)
+{
+	int uriStartChar;
+	char *reduced_uri;
+	long unsigned int moduleLen;
+
+	// Remove the "/[conf->api_prefix]/" of the uri
+	uriStartChar = (int) strlen(conf->api_prefix);
+	reduced_uri = (char *) &uri[uriStartChar];
+
+	// no module provided, full uri like /api or /api/
+	if (
+		strlen(reduced_uri) <= 1 ||
+		// uri like ?foo
+		reduced_uri[0] == '?' ||
+		// uri like /?foo
+		reduced_uri[1] == '?' ||
+		//uri like //foo
+		reduced_uri[1] == '/'
+	) {
+		return -1;
+	}
+
+	// remove left training / in uri
+	reduced_uri = &reduced_uri[1];
+	// The module is the substring before the next /
+	params = strchr(reduced_uri, '/');
+	// or the substring before the next question mark
+	if (params == NULL) {
+		params = strchr(reduced_uri, '?');
+	}
+
+	if (params == NULL)
+		moduleLen = strlen(reduced_uri);
+	else
+		moduleLen = (long unsigned int) (params - reduced_uri);
+
+	//~module = calloc(moduleLen, sizeof(char *));
+	strncpy(module, reduced_uri, moduleLen);
+
+	printf("Module: %s\nparams: %s\n", module, params);
 	return 0;
 }
 
