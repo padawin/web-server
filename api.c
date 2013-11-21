@@ -112,7 +112,6 @@ short decompose_uri(const char *uri, s_config *conf, char *module, char *params)
 		strncpy(params, p, strlen(p));
 	}
 
-	//~module = calloc(moduleLen, sizeof(char *));
 	strncpy(module, reduced_uri, moduleLen);
 
 	return 0;
