@@ -1,9 +1,16 @@
 // For dlopen
 #include <dlfcn.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <evhttp.h>
+#include <map.h>
 #include "api.h"
+
+// Limit to 255 the total number of parameters, which is already huge...
+#define TOTAL_PARAMS_NUMBER 255
+
+short decompose_uri(const char *uri, s_config *conf, char *module, char *params);
 
 /**
  * Function used as a callback to be called when a request to the API is received
@@ -17,60 +24,103 @@ short api_cb(struct evhttp_request *req, struct evbuffer *evb, s_config *conf)
 {
 	const char *cb;
 
-	char *uri, *module, *response;
-	int uriStartChar, moduleLen;
+	char *params, *module, *response;
+	short detect_module_result;
+	struct evkeyvalq *headers;
+	struct evkeyval *header;
+	map params_map;
 
-	// Remove the "/[conf->api_prefix]/" of the uri
-	uriStartChar = (int) strlen(conf->api_prefix);
-	uri = &req->uri[uriStartChar];
-
-	// no module provided, full uri like /api or /api/
-	if (
-		strlen(uri) <= 1 ||
-		// uri like ?foo
-		uri[0] == '?' ||
-		// uri like /?foo
-		uri[1] == '?' ||
-		//uri like //foo
-		uri[1] == '/'
-	) {
-		return -1;
-	}
-
-	// remove left training / in uri
-	uri = &uri[1];
-	// The module is the substring before the next /
-	module = strchr(uri, '/');
-	// or the substring before the next question mark
-	if (module == NULL) {
-		module = strchr(uri, '?');
-	}
-
-	if (module == NULL) {
-		module = uri;
-	}
-	else {
-		moduleLen = (int) (module - uri);
-		module = uri;
-		module[moduleLen] = '\0';
+	module = calloc(1, sizeof(char *));
+	params = calloc(1, sizeof(char *));
+	if ((detect_module_result = decompose_uri(req->uri, conf, module, params)) != 0) {
+		return detect_module_result;
 	}
 
 	// Get .so to execute
 	void *loaded_module = map_get_entry(module, &conf->api_modules);
 	if (loaded_module == NULL) {
+		free(module);
+		free(params);
 		return -1;
+	}
+
+	map_init(&params_map, TOTAL_PARAMS_NUMBER);
+	// get arguments
+	if (params != NULL) {
+		headers = malloc(sizeof(struct evkeyvalq*));
+		evhttp_parse_query_str(&params[1], headers);
+		for (header = headers->tqh_first; header; header = header->next.tqe_next) {
+			map_add_entry(header->key, header->value, &params_map);
+		}
+		free(headers);
 	}
 
 	// Get method
 	cb = api_get_method(req);
 
-	response = api_run_module(loaded_module, module, cb);
+	response = api_run_module(loaded_module, module, cb, &params_map);
+	free(module);
+	free(params);
+	map_free(&params_map);
 	if (response == NULL) {
 		return -1;
 	}
 
 	// Print the result
 	evbuffer_add_printf(evb, "%s", response);
+	return 0;
+}
+
+/**
+ * Function to extract the module name and the parameters from the uri.
+ *
+ * @param const char *uri The uri to analyse
+ * @param s_config *conf The server configuration
+ * @param char *module Variable where the module name will be stored
+ * @param char *params Variable where the params string will be stored
+ * @return short 0 if everything went fine, -1 else
+ */
+short decompose_uri(const char *uri, s_config *conf, char *module, char *params)
+{
+	int uriStartChar;
+	char *reduced_uri, *p;
+	long unsigned int moduleLen;
+
+	// Remove the "/[conf->api_prefix]/" of the uri
+	uriStartChar = (int) strlen(conf->api_prefix);
+	reduced_uri = (char *) &uri[uriStartChar];
+
+	// no module provided, full uri like /api or /api/
+	if (
+		strlen(reduced_uri) <= 1 ||
+		// uri like ?foo
+		reduced_uri[0] == '?' ||
+		// uri like /?foo
+		reduced_uri[1] == '?' ||
+		//uri like //foo
+		reduced_uri[1] == '/'
+	) {
+		return -1;
+	}
+
+	// remove left training / in uri
+	reduced_uri = &reduced_uri[1];
+	// The module is the substring before the next /
+	p = strchr(reduced_uri, '/');
+	// or the substring before the next question mark
+	if (p == NULL) {
+		p = strchr(reduced_uri, '?');
+	}
+
+	if (p == NULL)
+		moduleLen = strlen(reduced_uri);
+	else {
+		moduleLen = (long unsigned int) (p - reduced_uri);
+		strncpy(params, p, strlen(p));
+	}
+
+	strncpy(module, reduced_uri, moduleLen);
+
 	return 0;
 }
 
@@ -130,10 +180,11 @@ const char *api_get_method(struct evhttp_request *req)
  * 		error occurs
  * @param const char *callback The method name, from that, the function name will
  * 		be defined.
+ * @param const map* Map of the request parameters
  * @return char* The return value of the called function. Or null if the function
  * 		does not exist.
  */
-char *api_run_module(void *module, const char *module_name, const char *callback)
+char *api_run_module(void *module, const char *module_name, const char *callback, const map *params)
 {
 	const unsigned short int cb_size = 13;
 	char *result;
@@ -151,7 +202,7 @@ char *api_run_module(void *module, const char *module_name, const char *callback
 		return NULL;
 	}
 
-	return query();
+	return query(params);
 }
 
 /**
