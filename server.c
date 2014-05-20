@@ -169,7 +169,7 @@ int main(int argc, char* argv[])
 
 	config_provided = 0;
 	conf_path = NULL;
-	while ((option = getopt (argc, argv, "c:")) != -1) {
+	while ((option = getopt(argc, argv, "c:")) != -1) {
 		switch (option) {
 			case 'c':
 				conf_path = realpath(optarg, conf_path);
