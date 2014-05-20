@@ -97,3 +97,22 @@ api_modules_number = 2;
 api_modules: ("foo", "bar");
 ```
 And then restart the server and call http://localhost:port/api/%modulename%
+
+## Example of module
+
+```
+#include <webserver/module.h>
+#include <map.h>
+#include <stdlib.h>
+
+char *get_call(map *params)
+{
+	char *foo;
+
+	if ((foo = map_get_entry("foo", params)) != NULL) {
+		return foo;
+	}
+
+	return (char *) "foo";
+}
+```
