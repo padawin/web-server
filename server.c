@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <evhttp.h>
+#include <unistd.h>
 
 // From https://github.com/padawin/map-structure-implementation
 #include <map.h>
@@ -156,19 +157,35 @@ void get_configuration_filepath(char *path, const unsigned short int path_size)
 	snprintf(path, path_size, CONF_PATH_TEMPLATE, APP_NAME, APP_NAME);
 }
 
-int main()
+int main(int argc, char* argv[])
 {
-	int http_port;
+	int http_port, option;
+	short int config_provided;
+	const unsigned short int path_size = 250;
 	const char *http_addr;
 	struct evhttp *http_server;
 	s_config *c;
+	char *conf_path;
+
+	config_provided = 0;
+	conf_path = NULL;
+	while ((option = getopt (argc, argv, "c:")) != -1) {
+		switch (option) {
+			case 'c':
+				conf_path = realpath(optarg, conf_path);
+				config_provided = 1;
+				break;
+			default:
+				abort();
+		}
+	}
 
 	c = (s_config*) malloc(sizeof(s_config));
 
-	const unsigned short int path_size = 50;
-	char conf_path[path_size];
-
-	get_configuration_filepath(conf_path, path_size);
+	if (config_provided == 0) {
+		conf_path = (char *) malloc(path_size);
+		get_configuration_filepath(conf_path, path_size);
+	}
 
 	int confRet;
 	if ((confRet = get_server_config(c, conf_path)) != CONFIG_FILE_READ_OK) {
