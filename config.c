@@ -26,6 +26,7 @@ int get_server_config(s_config *c, char *config_path)
 		&& config_lookup_int(&cfg, "buffer_size", &(c->buffer_size))
 		&& config_lookup_int(&cfg, "api_modules_number", &(c->api_modules_number))
 	) {
+		c->buffer = (char*) calloc((size_t) c->buffer_size, sizeof(char));
 
 		/* Output a list of all movies in the inventory. */
 		modules_setting = config_lookup(&cfg, "api_modules");
@@ -46,8 +47,6 @@ int get_server_config(s_config *c, char *config_path)
 
 			map_init(&c->api_modules, c->api_modules_number);
 		}
-
-		c->buffer = (char*) calloc((size_t) c->buffer_size, sizeof(char));
 
 		return CONFIG_FILE_READ_OK;
 	}
