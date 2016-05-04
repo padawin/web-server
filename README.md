@@ -12,7 +12,7 @@ Provides an API and a web access.
 
 ## Usage
 
-In config.cfg, change the values to match your environment.
+In config.conf, change the values to match your environment.
 
 Compile it:
 ```
